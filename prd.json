@@ -109,7 +109,7 @@
         "pytest: test_us007_material_has_diffuse, test_us007_material_has_roughness"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "PyRedner uses separate Material(diffuse_texture, specular_texture, roughness_texture). Mitsuba principled BSDF combines these differently."
     },
     {
