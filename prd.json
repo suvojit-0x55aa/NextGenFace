@@ -271,7 +271,7 @@
         "pytest: test_us018_save_image_no_pyredner, test_us018_save_with_gamma"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "Only pyredner usage in image.py is `pyredner.imwrite()` on line 19. Replace with cv2.imwrite after gamma correction."
     },
     {
