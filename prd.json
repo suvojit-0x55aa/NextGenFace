@@ -60,7 +60,7 @@
         "pytest: test_us004_fov_matches_original, test_us004_camera_dict_valid"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "The original uses pyredner.Camera. We need an equivalent Mitsuba perspective sensor dict. FOV formula must match exactly."
     },
     {
