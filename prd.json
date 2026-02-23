@@ -316,7 +316,7 @@
         "pytest: test_us021_step3_loss_decreases, test_us021_step3_textures_refined"
       ],
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "notes": "Step 3 directly optimizes texture tensors. Requires texture gradient correctness from US-016."
     },
     {
