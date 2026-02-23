@@ -286,7 +286,7 @@
         "pytest: test_us019_step1_loss_decreases, test_us019_step1_no_nan"
       ],
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "notes": "Step 1 is landmarks-only (no rendering). It should work if camera transforms are correct. Pure PyTorch optimization."
     },
     {
