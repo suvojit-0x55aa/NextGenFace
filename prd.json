@@ -1,0 +1,410 @@
+{
+  "projectName": "NextFace Mitsuba 3 Port",
+  "branchName": "ralph/mitsuba3-port",
+  "description": "Port NextFace 3D face reconstruction from PyRedner to Mitsuba 3 with Python 3.10+ and UV package management",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize UV project with pyproject.toml",
+      "description": "As a developer, I need the project scaffolded with UV so that dependencies are reproducible and modern.",
+      "acceptanceCriteria": [
+        "pyproject.toml exists with [project] metadata (name, version, python >=3.10)",
+        "Dependencies: mitsuba>=3.5, torch>=2.0, numpy, opencv-python, h5py, tqdm, mediapipe",
+        "Dev dependencies: pytest, pytest-cov",
+        "`uv sync` succeeds without errors",
+        "pytest: test_us001_uv_sync_succeeds"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Foundation story. Use uv init if no pyproject.toml exists. Pin mitsuba>=3.5 for stable differentiable rendering."
+    },
+    {
+      "id": "US-002",
+      "title": "Create Mitsuba 3 variant selection utility",
+      "description": "As a developer, I need a utility that selects the correct Mitsuba variant (cuda_ad_rgb or llvm_ad_rgb) based on GPU availability.",
+      "acceptanceCriteria": [
+        "Module `mitsuba_variant.py` exports `ensure_variant() -> str`",
+        "Returns 'cuda_ad_rgb' when CUDA available, 'llvm_ad_rgb' otherwise",
+        "Calls mi.set_variant() as side effect",
+        "Idempotent: calling twice is safe",
+        "pytest: test_us002_variant_returns_string, test_us002_variant_idempotent"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Must be imported before any other mitsuba usage. The variant determines GPU vs CPU execution."
+    },
+    {
+      "id": "US-003",
+      "title": "Add smoke test for mitsuba import and rendering",
+      "description": "As a developer, I need a smoke test that verifies mitsuba can render a trivial scene so I know the installation works.",
+      "acceptanceCriteria": [
+        "Test file `tests/test_smoke.py` exists",
+        "test_mitsuba_imports: imports mitsuba, drjit without error",
+        "test_minimal_render: renders a 32x32 scene with a single sphere, output shape is (32, 32, 3)",
+        "All tests pass with `pytest tests/test_smoke.py`"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "This validates the entire mitsuba+drjit stack is functional before we build on it."
+    },
+    {
+      "id": "US-004",
+      "title": "Implement perspective camera builder for Mitsuba",
+      "description": "As the renderer, I need to construct a Mitsuba perspective camera from focal length, image width, and image height so that the projection matches the original NextFace camera.",
+      "acceptanceCriteria": [
+        "Function `build_camera(focal, width, height) -> dict` returns a Mitsuba camera dict",
+        "FOV calculation matches original: fov = 360 * atan(width / (2*focal)) / pi",
+        "Camera positioned at origin, looking at +Z, up vector (0, -1, 0)",
+        "clip_near = 10.0 preserved from original",
+        "Resolution set to (height, width) matching original convention",
+        "pytest: test_us004_fov_matches_original, test_us004_camera_dict_valid"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "The original uses pyredner.Camera. We need an equivalent Mitsuba perspective sensor dict. FOV formula must match exactly."
+    },
+    {
+      "id": "US-005",
+      "title": "Verify coordinate system compatibility",
+      "description": "As the renderer, I need the Mitsuba coordinate system to match NextFace conventions so that existing camera transforms and vertex data work correctly.",
+      "acceptanceCriteria": [
+        "Document coordinate differences between PyRedner and Mitsuba 3 in a test file",
+        "Test that a point at (0,0,1) projects to image center with both systems",
+        "Test that up vector (0,-1,0) produces correct orientation",
+        "If transform needed, implement coord_transform() function",
+        "pytest: test_us005_origin_projects_to_center, test_us005_up_vector_orientation"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "PyRedner uses right-handed coords. Mitsuba 3 also right-handed but may differ in camera convention. Must verify empirically."
+    },
+    {
+      "id": "US-006",
+      "title": "Implement mesh construction from vertex and face buffers",
+      "description": "As the renderer, I need to create a Mitsuba mesh from PyTorch vertex/face tensors so that the morphable model geometry can be rendered.",
+      "acceptanceCriteria": [
+        "Function `build_mesh(vertices, indices, normals, uvs) -> mi.Mesh`",
+        "vertices: [V, 3] float32 torch tensor",
+        "indices: [F, 3] int32 torch tensor",
+        "normals: [V, 3] float32 torch tensor (optional)",
+        "uvs: [V, 2] float32 torch tensor (optional)",
+        "Resulting mesh has correct vertex count and face count",
+        "pytest: test_us006_mesh_vertex_count, test_us006_mesh_face_count, test_us006_mesh_with_uvs"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Mitsuba mi.Mesh requires specific buffer formats. Torch tensors must be converted to drjit/mitsuba types. Face winding order may need flipping."
+    },
+    {
+      "id": "US-007",
+      "title": "Implement principled BSDF material from texture tensors",
+      "description": "As the renderer, I need to create Mitsuba materials from diffuse, specular, and roughness texture tensors so that face appearance is correctly represented.",
+      "acceptanceCriteria": [
+        "Function `build_material(diffuse, specular, roughness) -> dict` returns Mitsuba BSDF dict",
+        "diffuse: [H, W, 3] tensor mapped to base_color",
+        "specular: [H, W, 3] tensor mapped to specular reflectance",
+        "roughness: [H, W, 1] tensor mapped to roughness parameter",
+        "Uses principled BSDF or equivalent microfacet model",
+        "Textures correctly oriented (matches UV mapping)",
+        "pytest: test_us007_material_has_diffuse, test_us007_material_has_roughness"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "PyRedner uses separate Material(diffuse_texture, specular_texture, roughness_texture). Mitsuba principled BSDF combines these differently."
+    },
+    {
+      "id": "US-008",
+      "title": "Verify UV mapping consistency with original",
+      "description": "As the renderer, I need UV coordinates to produce the same texture mapping as the original so that the morphable model textures look correct.",
+      "acceptanceCriteria": [
+        "Render a mesh with checkerboard texture using both old and new UV mapping",
+        "Visual comparison shows matching UV layout",
+        "UV flip (v = 1 - v) preserved from original pipeline.py line 34",
+        "pytest: test_us008_uv_range_zero_one, test_us008_uv_flip_applied"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Original does uvMap[:, 1] = 1.0 - uvMap[:, 1]. Mitsuba may have different UV origin convention."
+    },
+    {
+      "id": "US-009",
+      "title": "Implement environment map emitter from tensor",
+      "description": "As the renderer, I need to create a Mitsuba environment map from a PyTorch tensor so that spherical harmonics lighting works.",
+      "acceptanceCriteria": [
+        "Function `build_envmap(envmap_tensor) -> dict` returns Mitsuba envmap emitter dict",
+        "envmap_tensor: [H, W, 3] float32 torch tensor",
+        "Tensor converted to mi.Bitmap correctly",
+        "Environment map orientation matches original PyRedner convention",
+        "pytest: test_us009_envmap_dict_valid, test_us009_envmap_from_tensor_shape"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "PyRedner uses pyredner.EnvironmentMap(tensor). Mitsuba uses envmap emitter with bitmap. Must verify orientation matches."
+    },
+    {
+      "id": "US-010",
+      "title": "Verify spherical harmonics to envmap pipeline",
+      "description": "As the renderer, I need the SH coefficients to produce matching environment maps through Mitsuba so that lighting is consistent.",
+      "acceptanceCriteria": [
+        "SphericalHarmonics.toEnvMap() output feeds correctly into build_envmap()",
+        "Rendered image with SH band 0 only produces uniform illumination",
+        "Rendered image brightness is monotonically related to SH band 0 coefficient",
+        "pytest: test_us010_sh_uniform_illumination, test_us010_sh_brightness_monotonic"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "SphericalHarmonics class is pure PyTorch and unchanged. We just need to verify its output integrates with the new envmap builder."
+    },
+    {
+      "id": "US-011",
+      "title": "Implement Mitsuba scene assembly (buildScenes equivalent)",
+      "description": "As the renderer, I need to assemble complete Mitsuba scenes from mesh, material, camera, and envmap components so that the renderer can produce images.",
+      "acceptanceCriteria": [
+        "Method `Renderer.build_scene(vertices, indices, normals, uvs, diffuse, specular, roughness, focal, envmap) -> mi.Scene`",
+        "Assembles camera, mesh, material, and envmap into a single scene",
+        "Handles batch dimension: vertices[i], envmap[i], focal[i]",
+        "Shared texture mode: when diffuse.shape[0]==1, reuse for all frames",
+        "pytest: test_us011_scene_renders_without_error, test_us011_shared_texture_mode"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "This replaces buildScenes() in renderer.py. Must use mi.load_dict() with the component dicts from US-004,006,007,009."
+    },
+    {
+      "id": "US-012",
+      "title": "Implement forward rendering (path tracing)",
+      "description": "As the renderer, I need to path-trace a scene and return RGBA images so that the optimization can compute photometric loss.",
+      "acceptanceCriteria": [
+        "Method `Renderer.render(scenes) -> torch.Tensor` returns [N, H, W, 4] RGBA images",
+        "Uses mi.render() with configured sample count",
+        "Alpha channel correctly represents mesh coverage",
+        "Output is a PyTorch tensor on the correct device",
+        "pytest: test_us012_render_output_shape, test_us012_render_has_alpha, test_us012_render_on_device"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Replaces renderPathTracing(). Mitsuba render output is HWC format. Must convert mi.TensorXf to torch.Tensor."
+    },
+    {
+      "id": "US-013",
+      "title": "Implement albedo rendering mode",
+      "description": "As the renderer, I need to render diffuse reflectance (albedo) images so that texture visualization works.",
+      "acceptanceCriteria": [
+        "Method `Renderer.render_albedo(scenes) -> torch.Tensor` returns [N, H, W, 4]",
+        "Output shows only diffuse reflectance, no lighting effects",
+        "Alpha channel present and correct",
+        "Equivalent to original renderAlbedo() with diffuse_reflectance channel",
+        "pytest: test_us013_albedo_no_lighting, test_us013_albedo_output_shape"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Original uses channels=[diffuse_reflectance, alpha] with max_bounces=0. In Mitsuba, this may require an AOV integrator or a direct integrator with 0 bounces."
+    },
+    {
+      "id": "US-014",
+      "title": "Implement DrJit-PyTorch gradient bridge",
+      "description": "As the optimizer, I need gradients to flow from Mitsuba's DrJit AD system back to PyTorch tensors so that torch.optim can optimize scene parameters.",
+      "acceptanceCriteria": [
+        "Gradient bridge function using dr.wrap_ad() or custom autograd.Function",
+        "Forward: torch params -> mitsuba render -> torch image",
+        "Backward: torch grad -> drjit grad -> torch param grads",
+        "Verified with simple test: optimize a single color to match target",
+        "pytest: test_us014_gradient_flows_to_params, test_us014_color_optimization_converges"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "This is the most critical and complex piece. DrJit and PyTorch have separate AD graphs. Must bridge them correctly."
+    },
+    {
+      "id": "US-015",
+      "title": "Verify gradient correctness for vertex positions",
+      "description": "As the optimizer, I need gradients w.r.t. vertex positions to be correct so that shape optimization works.",
+      "acceptanceCriteria": [
+        "Render a simple mesh, compute loss, backprop to vertex positions",
+        "Finite difference check: analytic grad ≈ numerical grad (rtol=0.1)",
+        "Gradient magnitude is non-zero for visible vertices",
+        "Gradient is zero for occluded vertices",
+        "pytest: test_us015_vertex_grad_nonzero, test_us015_vertex_grad_finite_diff"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Vertex position gradients are essential for shape coefficient optimization in Steps 2 and 3."
+    },
+    {
+      "id": "US-016",
+      "title": "Verify gradient correctness for texture parameters",
+      "description": "As the optimizer, I need gradients w.r.t. texture values to be correct so that albedo optimization works.",
+      "acceptanceCriteria": [
+        "Render with a texture, compute loss, backprop to texture tensor",
+        "Finite difference check: analytic grad ≈ numerical grad (rtol=0.1)",
+        "Gradient flows through diffuse, specular, and roughness textures",
+        "pytest: test_us016_texture_grad_nonzero, test_us016_diffuse_grad_finite_diff"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Texture gradients are essential for Step 3 (finetuning albedos). Must verify all three texture types."
+    },
+    {
+      "id": "US-017",
+      "title": "Create new Renderer class with matching API",
+      "description": "As the pipeline, I need the new Renderer class to have the same public API as the original so that pipeline.py requires minimal changes.",
+      "acceptanceCriteria": [
+        "Class `Renderer` in `renderer.py` with same constructor signature: (samples, bounces, device)",
+        "Same public attributes: samples, bounces, device, screenWidth, screenHeight, clip_near",
+        "Methods: setupCamera, buildScenes, render, renderAlbedo",
+        "buildScenes signature matches original (vertices, indices, normal, uv, diffuse, specular, roughness, focal, envMap)",
+        "pytest: test_us017_renderer_api_compatible, test_us017_renderer_attributes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "This story assembles US-004 through US-013 into the final Renderer class. API compatibility means pipeline.py needs zero changes."
+    },
+    {
+      "id": "US-018",
+      "title": "Fix image.py saveImage to remove PyRedner dependency",
+      "description": "As the pipeline, I need saveImage() to work without pyredner so that output saving doesn't fail.",
+      "acceptanceCriteria": [
+        "saveImage() in image.py no longer imports pyredner",
+        "Uses cv2 or torchvision to save images with gamma correction",
+        "Gamma correction formula: output = clamp(image, 0, 1) ^ (1/gamma) * 255",
+        "Handles both 3-channel and 4-channel images",
+        "pytest: test_us018_save_image_no_pyredner, test_us018_save_with_gamma"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Only pyredner usage in image.py is `pyredner.imwrite()` on line 19. Replace with cv2.imwrite after gamma correction."
+    },
+    {
+      "id": "US-019",
+      "title": "Verify Step 1 optimization (landmarks only)",
+      "description": "As a user, I need Step 1 (head pose + expression from landmarks) to converge so that the coarse alignment works.",
+      "acceptanceCriteria": [
+        "Step 1 runs without error using new renderer",
+        "Loss decreases monotonically over iterations (with tolerance for noise)",
+        "Final landmark reprojection error < 5 pixels on test image",
+        "Rotation and translation parameters are reasonable (no NaN, no explosion)",
+        "pytest: test_us019_step1_loss_decreases, test_us019_step1_no_nan"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "Step 1 is landmarks-only (no rendering). It should work if camera transforms are correct. Pure PyTorch optimization."
+    },
+    {
+      "id": "US-020",
+      "title": "Verify Step 2 optimization (photometric + statistical)",
+      "description": "As a user, I need Step 2 (shape, albedo, lighting optimization) to converge with the new renderer.",
+      "acceptanceCriteria": [
+        "Step 2 runs without error using new renderer",
+        "Gradients flow through render -> loss -> parameters",
+        "Loss decreases over iterations",
+        "Rendered images are visually reasonable (not black, not white, face-shaped)",
+        "pytest: test_us020_step2_loss_decreases, test_us020_step2_renders_face"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "This is the first story that exercises the full differentiable rendering pipeline. Most likely to surface gradient bridge bugs."
+    },
+    {
+      "id": "US-021",
+      "title": "Verify Step 3 optimization (texture refinement)",
+      "description": "As a user, I need Step 3 (texture finetuning) to converge with the new renderer.",
+      "acceptanceCriteria": [
+        "Step 3 runs without error using new renderer",
+        "Gradients flow to diffuse, specular, and roughness textures",
+        "Loss decreases over iterations",
+        "Refined textures show more detail than statistical prior textures",
+        "pytest: test_us021_step3_loss_decreases, test_us021_step3_textures_refined"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "Step 3 directly optimizes texture tensors. Requires texture gradient correctness from US-016."
+    },
+    {
+      "id": "US-022",
+      "title": "End-to-end single image reconstruction",
+      "description": "As a user, I need to run the full pipeline on a single image and get face reconstruction output.",
+      "acceptanceCriteria": [
+        "python optimizer.py --input ./input/s1.png --output ./output/ runs to completion",
+        "Output directory contains: render_0.png, diffuseMap_0.png, specularMap_0.png, roughnessMap_0.png, mesh0.obj, envMap_0.png",
+        "No pyredner imports anywhere in call stack",
+        "Total runtime < 2x original (within reason for different renderer)",
+        "pytest: test_us022_e2e_single_image (integration test, may need test fixture)"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Full integration test. Requires all previous stories working together. May need a small test image fixture."
+    },
+    {
+      "id": "US-023",
+      "title": "End-to-end multi-image reconstruction with shared identity",
+      "description": "As a user, I need to run the pipeline on a directory of images with shared identity.",
+      "acceptanceCriteria": [
+        "python optimizer.py --input ./input/multiview/ --sharedIdentity --output ./output/ runs to completion",
+        "Shape and albedo coefficients are shared (shape[0] == 1)",
+        "Per-frame expression, rotation, translation are independent",
+        "Output contains render_i.png for each input image",
+        "pytest: test_us023_e2e_shared_identity"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Tests the shared texture path in buildScenes where diffuse.shape[0]==1."
+    },
+    {
+      "id": "US-024",
+      "title": "Checkpoint save/load round-trip",
+      "description": "As a user, I need to save and resume optimization from checkpoints so that long runs can be interrupted.",
+      "acceptanceCriteria": [
+        "saveParameters() writes valid pickle with all parameters",
+        "loadParameters() restores state correctly",
+        "Optimization results from interrupted+resumed run match continuous run (within tolerance)",
+        "pytest: test_us024_checkpoint_roundtrip, test_us024_resume_from_checkpoint"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Checkpoint format is pickle with numpy arrays. Renderer state (screenWidth, screenHeight) must be preserved."
+    },
+    {
+      "id": "US-025",
+      "title": "Remove all pyredner/redner imports",
+      "description": "As a developer, I need zero references to pyredner or redner in the codebase so that the old dependency is fully removed.",
+      "acceptanceCriteria": [
+        "grep -r 'pyredner\\|import redner' NextFace/ returns no results",
+        "pyredner is not in pyproject.toml dependencies",
+        "All tests pass without pyredner installed",
+        "pytest: test_us025_no_pyredner_imports"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "Final cleanup. PyRedner references exist in renderer.py (full file) and image.py (line 18-19 only)."
+    },
+    {
+      "id": "US-026",
+      "title": "Achieve 60% test coverage on renderer.py",
+      "description": "As a developer, I need adequate test coverage on the renderer module to catch regressions.",
+      "acceptanceCriteria": [
+        "pytest --cov=NextFace/renderer --cov-report=term shows >= 60% coverage",
+        "All public methods have at least one test",
+        "Edge cases tested: empty mesh, single triangle, zero roughness",
+        "pytest: run pytest --cov and verify percentage"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Focus on renderer.py since it has the most new code. Other files are pure PyTorch and unchanged."
+    },
+    {
+      "id": "US-027",
+      "title": "Final validation and documentation",
+      "description": "As a developer, I need a final validation pass confirming the port is complete and documented.",
+      "acceptanceCriteria": [
+        "All 26 previous stories pass",
+        "README or PORTING_PLAN.md updated with completion status",
+        "No TODO or FIXME comments left in renderer.py",
+        "python -c 'from renderer import Renderer' succeeds",
+        "pytest: test_us027_all_stories_pass, test_us027_no_todos_in_renderer"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "Gate story. Only passes when everything else is green."
+    }
+  ]
+}
