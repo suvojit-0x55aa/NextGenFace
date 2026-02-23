@@ -346,7 +346,7 @@
         "pytest: test_us023_e2e_shared_identity"
       ],
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "notes": "Tests the shared texture path in buildScenes where diffuse.shape[0]==1."
     },
     {
