@@ -30,7 +30,7 @@
         "pytest: test_us002_variant_returns_string, test_us002_variant_idempotent"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Must be imported before any other mitsuba usage. The variant determines GPU vs CPU execution."
     },
     {
