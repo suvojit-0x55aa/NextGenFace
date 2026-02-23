@@ -2,14 +2,20 @@
 
 Drop-in replacement for the original PyRedner-based Renderer class.
 Same constructor signature, same public attributes, same method signatures.
+
+When torch gradients are enabled, rendering uses a DrJit-PyTorch gradient
+bridge so that loss.backward() propagates through the Mitsuba render back
+to the input scene parameter tensors (vertices, textures, envmap).
 """
 
 import torch
 import math
+import mitsuba as mi
 
 from mitsuba_variant import ensure_variant
 from scene_mitsuba import build_scenes
 from render_mitsuba import render_scenes, render_albedo
+from gradient_bridge import differentiable_render
 
 
 class Renderer:
@@ -101,12 +107,90 @@ class Renderer:
     def render(self, scenes):
         """Render scenes with path tracing.
 
+        When torch gradients are enabled and cached build params exist,
+        uses the DrJit-PyTorch gradient bridge so that loss.backward()
+        propagates gradients through rendering to the input tensors.
+
         Args:
             scenes: list of Mitsuba scenes (from buildScenes)
 
         Returns:
             ray traced images [N, H, W, 4]
         """
-        images = render_scenes(scenes, spp=self.samples, device=self.device)
+        if torch.is_grad_enabled() and hasattr(self, '_last_build_params'):
+            images = self._differentiable_render(scenes)
+        else:
+            images = render_scenes(scenes, spp=self.samples, device=self.device)
         self.counter += 1
         return images
+
+    def _differentiable_render(self, scenes):
+        """Render scenes with gradient flow via the DrJit-PyTorch bridge.
+
+        For each scene, maps the cached input torch tensors to their
+        corresponding Mitsuba scene parameter paths, then renders using
+        differentiable_render() which bridges DrJit AD with PyTorch autograd.
+        """
+        (vertices, indices, normal, uv, diffuse, specular,
+         roughness, focal, envMap) = self._last_build_params
+
+        shared_texture = diffuse.shape[0] == 1
+        n_frames = vertices.shape[0]
+
+        images = []
+        for i in range(n_frames):
+            tex_idx = 0 if shared_texture else i
+
+            # Discover available scene parameters
+            params = mi.traverse(scenes[i])
+
+            # Map torch tensors to scene parameter paths.
+            # Only include paths that actually exist in the scene.
+            torch_params = {}
+
+            if "face_mesh.vertex_positions" in params:
+                torch_params["face_mesh.vertex_positions"] = vertices[i].reshape(-1)
+
+            if "face_mesh.vertex_normals" in params:
+                torch_params["face_mesh.vertex_normals"] = normal[i].reshape(-1)
+
+            if "face_mesh.bsdf.base_color.data" in params:
+                torch_params["face_mesh.bsdf.base_color.data"] = diffuse[tex_idx]
+
+            if "face_mesh.bsdf.roughness.data" in params:
+                torch_params["face_mesh.bsdf.roughness.data"] = roughness[tex_idx]
+
+            if "envmap.data" in params:
+                envmap_tensor = envMap[i]
+                # Mitsuba envmap adds a wrap-around column internally
+                # (e.g., [H, W, 3] input becomes [H, W+1, 3] in scene).
+                # Pad input tensor to match by repeating first column.
+                envmap_scene = params["envmap.data"]
+                if isinstance(envmap_scene, mi.TensorXf):
+                    scene_shape = envmap_scene.shape
+                    if (len(scene_shape) == 3
+                            and scene_shape[1] == envmap_tensor.shape[0] + 1):
+                        # envmap_tensor is [H, W, 3], scene is [H, W+1, 3]
+                        envmap_tensor = torch.cat(
+                            [envmap_tensor, envmap_tensor[:, :1, :]], dim=1
+                        )
+                    elif (len(scene_shape) == 3
+                            and scene_shape[0] == envmap_tensor.shape[0]
+                            and scene_shape[1] == envmap_tensor.shape[1] + 1):
+                        envmap_tensor = torch.cat(
+                            [envmap_tensor, envmap_tensor[:, :1, :]], dim=1
+                        )
+                torch_params["envmap.data"] = envmap_tensor
+
+            img = differentiable_render(scenes[i], torch_params, spp=self.samples)
+
+            # Ensure RGBA (4 channels)
+            if img.shape[-1] == 3:
+                alpha = torch.ones(*img.shape[:-1], 1)
+                img = torch.cat([img, alpha], dim=-1)
+            elif img.shape[-1] > 4:
+                img = img[..., :4]
+
+            images.append(img.to(self.device))
+
+        return torch.stack(images, dim=0)
