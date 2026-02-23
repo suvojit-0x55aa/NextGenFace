@@ -331,7 +331,7 @@
         "pytest: test_us022_e2e_single_image (integration test, may need test fixture)"
       ],
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "notes": "Full integration test. Requires all previous stories working together. May need a small test image fixture."
     },
     {
