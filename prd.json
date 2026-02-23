@@ -301,7 +301,7 @@
         "pytest: test_us020_step2_loss_decreases, test_us020_step2_renders_face"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "This is the first story that exercises the full differentiable rendering pipeline. Most likely to surface gradient bridge bugs."
     },
     {
