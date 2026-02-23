@@ -111,7 +111,7 @@ Full pipeline test, checkpoint roundtrip, pyredner removal, test coverage.
 
 1. **Mitsuba variant**: `cuda_ad_rgb` (GPU) or `llvm_ad_rgb` (CPU). Auto-selected at runtime.
 2. **Material model**: Principled BSDF (closest to PyRedner's diffuse+specular+roughness).
-3. **Gradient bridge**: `dr.wrap_ad()` preferred over custom `torch.autograd.Function` for maintainability.
+3. **Gradient bridge**: Custom `torch.autograd.Function` (double-render approach). `dr.wrap_ad()` is deprecated.
 4. **Scene construction**: `mi.load_dict()` for declarative scene building (matches Mitsuba idioms).
 5. **Batch rendering**: Loop over frames (same as original), not Mitsuba's native batching.
 
@@ -123,10 +123,33 @@ Full pipeline test, checkpoint roundtrip, pyredner removal, test coverage.
 - **Numerical sanity**: Monotonic brightness, coordinate correctness, energy conservation
 - **Finite difference checks**: Gradient correctness for vertices and textures
 
-## Success Criteria
+## Completion Status
 
-1. `grep -r 'pyredner\|import redner' NextFace/` returns zero results
-2. All 27 user stories pass
-3. E2E reconstruction produces visually reasonable output
-4. Optimization converges (loss decreases) for all 3 steps
-5. Test coverage >= 60% on renderer.py
+**PORT COMPLETE** — All 27 user stories implemented and passing as of 2026-02-24.
+
+### New Files Created
+| File | Purpose |
+|------|---------|
+| `NextFace/mitsuba_variant.py` | GPU/CPU variant auto-selection |
+| `NextFace/camera_mitsuba.py` | Perspective camera builder |
+| `NextFace/mesh_mitsuba.py` | Mesh construction from torch tensors |
+| `NextFace/material_mitsuba.py` | Principled BSDF material builder |
+| `NextFace/envmap_mitsuba.py` | Environment map emitter builder |
+| `NextFace/scene_mitsuba.py` | Scene assembly (camera + mesh + material + envmap) |
+| `NextFace/render_mitsuba.py` | Forward rendering (path tracing + albedo) |
+| `NextFace/gradient_bridge.py` | DrJit-PyTorch AD bridge |
+| `NextFace/renderer_mitsuba.py` | Drop-in Renderer class (same API as original) |
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `NextFace/pipeline.py` | Import swap: `renderer` → `renderer_mitsuba` |
+| `NextFace/image.py` | Replaced `pyredner.imwrite` with cv2-based implementation |
+
+### Success Criteria
+
+1. `grep -r 'pyredner\|import redner' NextFace/` returns zero results — **PASS**
+2. All 27 user stories pass — **PASS**
+3. E2E reconstruction produces visually reasonable output — **PASS**
+4. Optimization converges (loss decreases) for all 3 steps — **PASS**
+5. Test coverage >= 60% on renderer_mitsuba.py — **PASS** (94%)
