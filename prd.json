@@ -403,7 +403,7 @@
         "pytest: test_us027_all_stories_pass, test_us027_no_todos_in_renderer"
       ],
       "priority": 27,
-      "passes": false,
+      "passes": true,
       "notes": "Gate story. Only passes when everything else is green."
     }
   ]
