@@ -167,7 +167,7 @@
         "pytest: test_us011_scene_renders_without_error, test_us011_shared_texture_mode"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "This replaces buildScenes() in renderer.py. Must use mi.load_dict() with the component dicts from US-004,006,007,009."
     },
     {
