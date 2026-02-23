@@ -388,7 +388,7 @@
         "pytest: run pytest --cov and verify percentage"
       ],
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "notes": "Focus on renderer.py since it has the most new code. Other files are pure PyTorch and unchanged."
     },
     {
