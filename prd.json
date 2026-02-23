@@ -227,7 +227,7 @@
         "pytest: test_us015_vertex_grad_nonzero, test_us015_vertex_grad_finite_diff"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "Vertex position gradients are essential for shape coefficient optimization in Steps 2 and 3."
     },
     {
