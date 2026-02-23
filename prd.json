@@ -241,7 +241,7 @@
         "pytest: test_us016_texture_grad_nonzero, test_us016_diffuse_grad_finite_diff"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": "Texture gradients are essential for Step 3 (finetuning albedos). Must verify all three texture types."
     },
     {
