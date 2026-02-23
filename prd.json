@@ -152,7 +152,7 @@
         "pytest: test_us010_sh_uniform_illumination, test_us010_sh_brightness_monotonic"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "SphericalHarmonics class is pure PyTorch and unchanged. We just need to verify its output integrates with the new envmap builder."
     },
     {
