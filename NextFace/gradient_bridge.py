@@ -24,6 +24,9 @@ def _set_scene_param(params, path, torch_val):
     if isinstance(original, mi.Color3f):
         flat = np_val.flatten()
         params[path] = mi.Color3f(float(flat[0]), float(flat[1]), float(flat[2]))
+    elif isinstance(original, mi.TensorXf):
+        # Preserve shape for texture data (e.g., [H, W, C])
+        params[path] = mi.TensorXf(np_val.reshape(original.shape))
     else:
         params[path] = type(original)(np_val.ravel())
 
@@ -36,6 +39,8 @@ def _torch_to_drjit(params, path, torch_val):
     if isinstance(original, mi.Color3f):
         flat = np_val.flatten()
         return mi.Color3f(float(flat[0]), float(flat[1]), float(flat[2]))
+    elif isinstance(original, mi.TensorXf):
+        return mi.TensorXf(np_val.reshape(original.shape))
     else:
         return type(original)(np_val.ravel())
 
@@ -43,6 +48,9 @@ def _torch_to_drjit(params, path, torch_val):
 def _drjit_grad_to_numpy(dr_val, shape):
     """Extract gradient from a DrJit value and reshape to match torch tensor."""
     g = dr.grad(dr_val)
+    if isinstance(g, mi.TensorXf):
+        # TensorXf has its own array conversion
+        return np.array(g).reshape(shape).astype(np.float32)
     # Use dr.ravel for structured types (Color3f, Vector3f, etc.)
     try:
         flat = dr.ravel(g)
@@ -79,15 +87,19 @@ class _DiffRender(torch.autograd.Function):
         shapes = ctx.shapes
         saved = ctx.saved_tensors
 
-        # Re-render with DrJit AD to compute gradients
+        # Re-render with DrJit AD to compute gradients.
+        # Create AD-tracked DrJit values, set them in params, then update
+        # once. This ensures TensorXf (texture) params are properly
+        # connected to the AD graph alongside Float params.
         params = mi.traverse(scene)
-        dr_tracked = {}
 
+        # Create AD-tracked DrJit values and set in params
+        ad_values = {}
         for path, val in zip(param_paths, saved):
-            dr_val = _torch_to_drjit(params, path, val)
-            dr.enable_grad(dr_val)
-            params[path] = dr_val
-            dr_tracked[path] = dr_val
+            drjit_val = _torch_to_drjit(params, path, val)
+            dr.enable_grad(drjit_val)
+            params[path] = drjit_val
+            ad_values[path] = drjit_val
         params.update()
 
         # Render with AD tracking
@@ -99,10 +111,10 @@ class _DiffRender(torch.autograd.Function):
         dr.enqueue(dr.ADMode.Backward, img)
         dr.traverse(dr.ADMode.Backward)
 
-        # Collect parameter gradients
+        # Collect parameter gradients from our AD-tracked values
         grads = [None, None, None]  # scene, spp, param_paths
         for path, shape in zip(param_paths, shapes):
-            g_np = _drjit_grad_to_numpy(dr_tracked[path], shape)
+            g_np = _drjit_grad_to_numpy(ad_values[path], shape)
             grads.append(torch.from_numpy(g_np))
 
         return tuple(grads)
