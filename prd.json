@@ -182,7 +182,7 @@
         "pytest: test_us012_render_output_shape, test_us012_render_has_alpha, test_us012_render_on_device"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "Replaces renderPathTracing(). Mitsuba render output is HWC format. Must convert mi.TensorXf to torch.Tensor."
     },
     {
