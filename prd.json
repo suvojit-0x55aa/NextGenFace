@@ -197,7 +197,7 @@
         "pytest: test_us013_albedo_no_lighting, test_us013_albedo_output_shape"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "Original uses channels=[diffuse_reflectance, alpha] with max_bounces=0. In Mitsuba, this may require an AOV integrator or a direct integrator with 0 bounces."
     },
     {
