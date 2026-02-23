@@ -212,7 +212,7 @@
         "pytest: test_us014_gradient_flows_to_params, test_us014_color_optimization_converges"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "This is the most critical and complex piece. DrJit and PyTorch have separate AD graphs. Must bridge them correctly."
     },
     {
