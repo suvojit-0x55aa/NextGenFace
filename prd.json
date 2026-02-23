@@ -138,7 +138,7 @@
         "pytest: test_us009_envmap_dict_valid, test_us009_envmap_from_tensor_shape"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "PyRedner uses pyredner.EnvironmentMap(tensor). Mitsuba uses envmap emitter with bitmap. Must verify orientation matches."
     },
     {
