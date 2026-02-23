@@ -44,7 +44,7 @@
         "All tests pass with `pytest tests/test_smoke.py`"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "This validates the entire mitsuba+drjit stack is functional before we build on it."
     },
     {
