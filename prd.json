@@ -374,7 +374,7 @@
         "pytest: test_us025_no_pyredner_imports"
       ],
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "notes": "Final cleanup. PyRedner references exist in renderer.py (full file) and image.py (line 18-19 only)."
     },
     {
