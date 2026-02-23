@@ -75,7 +75,7 @@
         "pytest: test_us005_origin_projects_to_center, test_us005_up_vector_orientation"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "PyRedner uses right-handed coords. Mitsuba 3 also right-handed but may differ in camera convention. Must verify empirically."
     },
     {
