@@ -44,5 +44,6 @@ def build_camera(focal, width, height, clip_near=10.0):
             "type": "hdrfilm",
             "width": width_val,
             "height": height_val,
+            "pixel_format": "rgba",
         },
     }
