@@ -256,7 +256,7 @@
         "pytest: test_us017_renderer_api_compatible, test_us017_renderer_attributes"
       ],
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "notes": "This story assembles US-004 through US-013 into the final Renderer class. API compatibility means pipeline.py needs zero changes."
     },
     {
