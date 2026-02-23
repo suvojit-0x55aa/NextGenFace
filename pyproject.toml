@@ -1,0 +1,23 @@
+[project]
+name = "nextface"
+version = "0.1.0"
+description = "3D face reconstruction using Mitsuba 3 differentiable rendering"
+requires-python = ">=3.10"
+dependencies = [
+    "mitsuba>=3.5",
+    "torch>=2.0",
+    "numpy",
+    "opencv-python",
+    "h5py",
+    "tqdm",
+    "mediapipe",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
