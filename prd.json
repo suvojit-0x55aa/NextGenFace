@@ -360,7 +360,7 @@
         "pytest: test_us024_checkpoint_roundtrip, test_us024_resume_from_checkpoint"
       ],
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "notes": "Checkpoint format is pickle with numpy arrays. Renderer state (screenWidth, screenHeight) must be preserved."
     },
     {
