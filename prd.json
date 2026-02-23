@@ -123,7 +123,7 @@
         "pytest: test_us008_uv_range_zero_one, test_us008_uv_flip_applied"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Original does uvMap[:, 1] = 1.0 - uvMap[:, 1]. Mitsuba may have different UV origin convention."
     },
     {
