@@ -92,7 +92,7 @@
         "pytest: test_us006_mesh_vertex_count, test_us006_mesh_face_count, test_us006_mesh_with_uvs"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Mitsuba mi.Mesh requires specific buffer formats. Torch tensors must be converted to drjit/mitsuba types. Face winding order may need flipping."
     },
     {
