@@ -15,7 +15,7 @@ from envmap_mitsuba import build_envmap
 
 def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
                  roughness, focal, envmap, screen_width, screen_height,
-                 samples=8, bounces=1):
+                 samples=8, bounces=1, albedo_mode=False):
     """Build a list of Mitsuba scenes from batched parameters.
 
     Args:
@@ -34,7 +34,9 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
         bounces: int, max path bounces
 
     Returns:
-        list[mi.Scene]: list of N loaded Mitsuba scenes
+        list[mi.Scene]: list of N loaded Mitsuba scenes.
+            When albedo_mode=True, scenes use an AOV integrator that outputs
+            albedo channels (diffuse reflectance) alongside the standard RGBA.
     """
     assert vertices.dim() == 3 and vertices.shape[-1] == 3
     assert normals.dim() == 3 and normals.shape[-1] == 3
@@ -64,16 +66,33 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
         )
         envmap_dict = build_envmap(envmap[i])
 
+        # Choose integrator: AOV for albedo mode, path for normal rendering
+        if albedo_mode:
+            integrator = {
+                "type": "aov",
+                "aovs": "dd.y:albedo",
+                "my_image": {
+                    "type": "path",
+                    "max_depth": 1,
+                },
+            }
+        else:
+            integrator = {
+                "type": "path",
+                "max_depth": bounces + 1,
+            }
+
         # Assemble scene dict with mesh + bsdf
         scene_dict = {
             "type": "scene",
-            "integrator": {
-                "type": "path",
-                "max_depth": bounces + 1,
-            },
+            "integrator": integrator,
             "sensor": camera_dict,
-            "envmap": envmap_dict,
         }
+
+        # Skip envmap in albedo mode so alpha correctly represents mesh coverage.
+        # The AOV integrator extracts material albedo regardless of lighting.
+        if not albedo_mode:
+            scene_dict["envmap"] = envmap_dict
 
         # Attach BSDF to mesh and add to scene
         mesh.set_bsdf(mi.load_dict(material_dict))
