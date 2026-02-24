@@ -29,7 +29,7 @@ class TestSharedIdentitySceneBuilding:
 
     def test_shared_texture_builds_n_scenes(self):
         """When diffuse.shape[0]==1, build_scenes still creates N scenes."""
-        from mitsuba_variant import ensure_variant
+        from variant_mitsuba import ensure_variant
         from scene_mitsuba import build_scenes
 
         ensure_variant()
@@ -68,7 +68,7 @@ class TestSharedIdentitySceneBuilding:
 
     def test_shared_vs_independent_texture_scenes(self):
         """Shared texture mode (1,H,W,3) vs independent (N,H,W,3) both work."""
-        from mitsuba_variant import ensure_variant
+        from variant_mitsuba import ensure_variant
         from scene_mitsuba import build_scenes
 
         ensure_variant()
@@ -182,7 +182,7 @@ class TestSharedIdentityRendering:
 
     def test_renderer_shared_texture_render(self):
         """Renderer.buildScenes + render works with shared textures (batch 1)."""
-        from mitsuba_variant import ensure_variant
+        from variant_mitsuba import ensure_variant
         from renderer_mitsuba import Renderer
 
         ensure_variant()

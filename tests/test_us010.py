@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
 
 from sphericalharmonics import SphericalHarmonics
 from envmap_mitsuba import build_envmap
-from mitsuba_variant import ensure_variant
+from variant_mitsuba import ensure_variant
 
 
 @pytest.fixture(autouse=True)

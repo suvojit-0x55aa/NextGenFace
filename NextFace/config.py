@@ -25,7 +25,7 @@ class Config:
 		self.optimizeFocalLength = True #if True the initial focal length is estimated otherwise it remains constant
 
 		#image
-		self.maxResolution = 512
+		self.maxResolution = 256
 
 		#optimization
 		self.iterStep1 = 2000 # number of iterations for the coarse optim
@@ -64,10 +64,8 @@ class Config:
 		'''
 
 		print('loading optim config from: ', filePath)
-		fp = open(filePath, 'r')
-		assert(fp is not None)
-		Lines = fp.readlines()
-		fp.close()
+		with open(filePath, 'r') as fp:
+			Lines = fp.readlines()
 
 		dic = {}
 

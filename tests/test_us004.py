@@ -3,7 +3,7 @@
 import math
 import pytest
 
-from NextFace.mitsuba_variant import ensure_variant
+from NextFace.variant_mitsuba import ensure_variant
 
 ensure_variant()
 

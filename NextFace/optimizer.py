@@ -5,11 +5,15 @@ from projection import estimateCameraPosition
 from textureloss import TextureLoss
 from pipeline import Pipeline
 from config import Config
-from utils import *
+from utils import mkdir_p, saveObj
 import argparse
+import numpy as np
 import pickle
+import torch
 import tqdm
 import sys
+import os
+import cv2
 
 class Optimizer:
 
@@ -47,7 +51,7 @@ class Optimizer:
 
     def saveParameters(self, outputFileName):
 
-        dict = {
+        params_dict = {
             'vShapeCoeff': self.pipeline.vShapeCoeff.detach().cpu().numpy(),
             'vAlbedoCoeff': self.pipeline.vAlbedoCoeff.detach().cpu().numpy(),
             'vExpCoeff': self.pipeline.vExpCoeff.detach().cpu().numpy(),
@@ -61,41 +65,38 @@ class Optimizer:
 
         }
         if self.vEnhancedDiffuse is not None:
-            dict['vEnhancedDiffuse'] = self.vEnhancedDiffuse.detach().cpu().numpy()
+            params_dict['vEnhancedDiffuse'] = self.vEnhancedDiffuse.detach().cpu().numpy()
         if self.vEnhancedSpecular is not None:
-            dict['vEnhancedSpecular'] = self.vEnhancedSpecular.detach().cpu().numpy()
+            params_dict['vEnhancedSpecular'] = self.vEnhancedSpecular.detach().cpu().numpy()
         if self.vEnhancedRoughness is not None:
-            dict['vEnhancedRoughness'] = self.vEnhancedRoughness.detach().cpu().numpy()
+            params_dict['vEnhancedRoughness'] = self.vEnhancedRoughness.detach().cpu().numpy()
 
-        handle = open(outputFileName, 'wb')
-        pickle.dump(dict, handle, pickle.HIGHEST_PROTOCOL)
-        handle.close()
+        with open(outputFileName, 'wb') as handle:
+            pickle.dump(params_dict, handle, pickle.HIGHEST_PROTOCOL)
 
     def loadParameters(self, pickelFileName):
-        handle = open(pickelFileName, 'rb')
-        assert handle is not None
-        dict = pickle.load(handle)
-        self.pipeline.vShapeCoeff = torch.tensor(dict['vShapeCoeff']).to(self.device)
-        self.pipeline.vAlbedoCoeff = torch.tensor(dict['vAlbedoCoeff']).to(self.device)
-        self.pipeline.vExpCoeff = torch.tensor(dict['vExpCoeff']).to(self.device)
-        self.pipeline.vRotation = torch.tensor(dict['vRotation']).to(self.device)
-        self.pipeline.vTranslation = torch.tensor(dict['vTranslation']).to(self.device)
-        self.pipeline.vFocals = torch.tensor(dict['vFocals']).to(self.device)
-        self.pipeline.vShCoeffs = torch.tensor(dict['vShCoeffs']).to(self.device)
-        self.pipeline.renderer.screenWidth = int(dict['screenWidth'])
-        self.pipeline.renderer.screenHeight = int(dict['screenHeight'])
-        self.pipeline.sharedIdentity = bool(dict['sharedIdentity'])
+        with open(pickelFileName, 'rb') as handle:
+            params_dict = pickle.load(handle)
+        self.pipeline.vShapeCoeff = torch.tensor(params_dict['vShapeCoeff']).to(self.device)
+        self.pipeline.vAlbedoCoeff = torch.tensor(params_dict['vAlbedoCoeff']).to(self.device)
+        self.pipeline.vExpCoeff = torch.tensor(params_dict['vExpCoeff']).to(self.device)
+        self.pipeline.vRotation = torch.tensor(params_dict['vRotation']).to(self.device)
+        self.pipeline.vTranslation = torch.tensor(params_dict['vTranslation']).to(self.device)
+        self.pipeline.vFocals = torch.tensor(params_dict['vFocals']).to(self.device)
+        self.pipeline.vShCoeffs = torch.tensor(params_dict['vShCoeffs']).to(self.device)
+        self.pipeline.renderer.screenWidth = int(params_dict['screenWidth'])
+        self.pipeline.renderer.screenHeight = int(params_dict['screenHeight'])
+        self.pipeline.sharedIdentity = bool(params_dict['sharedIdentity'])
 
-        if "vEnhancedDiffuse" in dict:
-            self.vEnhancedDiffuse = torch.tensor(dict['vEnhancedDiffuse']).to(self.device)
+        if "vEnhancedDiffuse" in params_dict:
+            self.vEnhancedDiffuse = torch.tensor(params_dict['vEnhancedDiffuse']).to(self.device)
 
-        if "vEnhancedSpecular" in dict:
-            self.vEnhancedSpecular = torch.tensor(dict['vEnhancedSpecular']).to(self.device)
+        if "vEnhancedSpecular" in params_dict:
+            self.vEnhancedSpecular = torch.tensor(params_dict['vEnhancedSpecular']).to(self.device)
 
-        if "vEnhancedRoughness" in dict:
-            self.vEnhancedRoughness = torch.tensor(dict['vEnhancedRoughness']).to(self.device)
+        if "vEnhancedRoughness" in params_dict:
+            self.vEnhancedRoughness = torch.tensor(params_dict['vEnhancedRoughness']).to(self.device)
 
-        handle.close()
         self.enableGrad()
 
     def enableGrad(self):
@@ -497,7 +498,7 @@ if __name__ == "__main__":
     if config.lamdmarksDetectorType == 'mediapipe':
         try:
             from  landmarksmediapipe import LandmarksDetectorMediapipe
-        except:
+        except ImportError:
             print('[WARN] Mediapipe for landmarks detection not availble. falling back to FAN landmarks detector. You may want to try Mediapipe because it is much accurate than FAN (pip install mediapipe)')
             config.lamdmarksDetectorType = 'fan'
 

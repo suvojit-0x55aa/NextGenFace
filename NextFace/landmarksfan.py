@@ -50,7 +50,6 @@ class LandmarksDetectorFAN:
 			break #only one subject per frame
 
 		return landmarks[0]
-		return torch.tensor(landmarks, device = self.device)
 
 	def drawLandmarks(self, image, landmarks):
 		'''

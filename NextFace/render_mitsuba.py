@@ -6,7 +6,6 @@ to produce RGBA images as PyTorch tensors.
 
 import torch
 import mitsuba as mi
-import drjit as dr
 import numpy as np
 
 

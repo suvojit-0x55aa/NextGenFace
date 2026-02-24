@@ -40,7 +40,7 @@ class MorphableModel:
                 print('[Error] to use the library, you have to install basel morphable  face model 2017 from: https://faces.dmi.unibas.ch/bfm/bfm2017.html', file=sys.stderr, flush=True)
                 print('Fill the form on the link and you will get instant download link into your inbox.', file=sys.stderr, flush=True)
                 print('Download  "model2017-1_face12_nomouth.h5" and put it inside ',path, ' and run again...', file=sys.stderr, flush=True)
-                exit(0)
+                raise FileNotFoundError(f"Basel Face Model not found at {pathH5Model}")
 
             self.file = h5py.File(pathH5Model, 'r')
             assert(self.file is not None)
@@ -59,7 +59,7 @@ class MorphableModel:
             print("Loading Albedo model from " + pathAlbedoModel + "...")
             if os.path.exists(pathAlbedoModel) == False:
                 print('[ERROR] Please install the albedo model from the link below, put it inside', path, 'and run again: https://github.com/waps101/AlbedoMM/releases/download/v1.0/albedoModel2020_face12_albedoPart.h5', file=sys.stderr, flush=True)
-                exit(0)
+                raise FileNotFoundError(f"Albedo model not found at {pathAlbedoModel}")
 
             self.file = h5py.File(pathAlbedoModel, 'r')
             assert(self.file is not None)

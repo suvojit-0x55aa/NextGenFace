@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
 
-from mitsuba_variant import ensure_variant
+from variant_mitsuba import ensure_variant
 
 ensure_variant()
 import mitsuba as mi
@@ -25,39 +25,9 @@ from renderer_mitsuba import Renderer
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_single_triangle(z=50.0):
-    """Single triangle visible from origin looking at +Z, beyond clip_near."""
-    vertices = torch.tensor([
-        [-1.0, -1.0, z],
-        [1.0, -1.0, z],
-        [0.0, 1.0, z],
-    ], dtype=torch.float32)
-    # Winding: normals face -Z (toward camera at origin)
-    indices = torch.tensor([[0, 2, 1]], dtype=torch.int32)
-    normals = torch.tensor([
-        [0.0, 0.0, -1.0],
-        [0.0, 0.0, -1.0],
-        [0.0, 0.0, -1.0],
-    ], dtype=torch.float32)
-    uvs = torch.tensor([
-        [0.0, 0.0],
-        [1.0, 0.0],
-        [0.5, 1.0],
-    ], dtype=torch.float32)
-    return vertices, indices, normals, uvs
-
-
-def _make_textures(h=4, w=4, diffuse_val=0.6, roughness_val=0.5):
-    """Create minimal texture tensors [1, H, W, C]."""
-    diffuse = torch.full((1, h, w, 3), diffuse_val, dtype=torch.float32)
-    specular = torch.full((1, h, w, 3), 0.04, dtype=torch.float32)
-    roughness = torch.full((1, h, w, 1), roughness_val, dtype=torch.float32)
-    return diffuse, specular, roughness
-
-
-def _make_envmap(h=8, w=16, brightness=1.0):
-    """Create minimal envmap tensor [1, H, W, 3]."""
-    return torch.full((1, h, w, 3), brightness, dtype=torch.float32)
+from helpers import make_single_triangle as _make_single_triangle
+from helpers import make_textures as _make_textures
+from helpers import make_envmap as _make_envmap
 
 
 # ---------------------------------------------------------------------------

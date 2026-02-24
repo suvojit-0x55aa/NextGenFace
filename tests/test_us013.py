@@ -13,7 +13,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
 
-from mitsuba_variant import ensure_variant
+from variant_mitsuba import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -21,59 +21,14 @@ def _variant():
     ensure_variant()
 
 
-def _make_triangle_mesh_params(n_frames=1, screen_size=32, diffuse_value=0.7):
-    """Create minimal triangle mesh parameters for scene building.
-
-    Geometry is placed at z=50 to be beyond the default clip_near=10.0.
-    """
-    vertices = torch.tensor([
-        [[-1.0, -1.0, 50.0],
-         [ 1.0, -1.0, 50.0],
-         [ 0.0,  1.0, 50.0]]
-    ], dtype=torch.float32).expand(n_frames, -1, -1).contiguous()
-
-    indices = torch.tensor([[0, 1, 2]], dtype=torch.int32)
-
-    normals = torch.tensor([
-        [[0.0, 0.0, -1.0],
-         [0.0, 0.0, -1.0],
-         [0.0, 0.0, -1.0]]
-    ], dtype=torch.float32).expand(n_frames, -1, -1).contiguous()
-
-    uvs = torch.tensor([
-        [0.0, 0.0],
-        [1.0, 0.0],
-        [0.5, 1.0]
-    ], dtype=torch.float32)
-
-    tex_h, tex_w = 8, 8
-    diffuse = torch.full((n_frames, tex_h, tex_w, 3), diffuse_value, dtype=torch.float32)
-    specular = torch.full((n_frames, tex_h, tex_w, 3), 0.04, dtype=torch.float32)
-    roughness = torch.full((n_frames, tex_h, tex_w, 1), 0.5, dtype=torch.float32)
-
-    focal = torch.full((n_frames,), 500.0, dtype=torch.float32)
-    envmap = torch.full((n_frames, 16, 16, 3), 1.0, dtype=torch.float32)
-
-    return {
-        "vertices": vertices,
-        "indices": indices,
-        "normals": normals,
-        "uvs": uvs,
-        "diffuse": diffuse,
-        "specular": specular,
-        "roughness": roughness,
-        "focal": focal,
-        "envmap": envmap,
-        "screen_width": screen_size,
-        "screen_height": screen_size,
-    }
+from helpers import make_triangle_mesh_params as _make_triangle_mesh_params
 
 
 def _build_albedo_scenes(n_frames=1, screen_size=32, diffuse_value=0.7):
     """Build Mitsuba scenes configured for albedo rendering."""
     from scene_mitsuba import build_scenes
     params = _make_triangle_mesh_params(
-        n_frames=n_frames, screen_size=screen_size, diffuse_value=diffuse_value
+        n_frames=n_frames, screen_size=screen_size, diffuse_value=diffuse_value, z=50.0
     )
     return build_scenes(**params, albedo_mode=True), screen_size
 
@@ -145,7 +100,7 @@ def test_us013_albedo_differs_from_path_traced():
     from scene_mitsuba import build_scenes
     from render_mitsuba import render_scenes, render_albedo
 
-    params = _make_triangle_mesh_params(n_frames=1, screen_size=32, diffuse_value=0.5)
+    params = _make_triangle_mesh_params(n_frames=1, screen_size=32, diffuse_value=0.5, z=50.0)
 
     # Normal render
     normal_scenes = build_scenes(**params, albedo_mode=False)

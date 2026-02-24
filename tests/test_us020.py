@@ -18,7 +18,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
 
-from mitsuba_variant import ensure_variant
+from variant_mitsuba import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -26,62 +26,7 @@ def setup_variant():
     ensure_variant()
 
 
-def _make_sphere_mesh(radius=5.0, center=(0, 0, 50), subdivisions=8):
-    """Create a UV sphere mesh as torch tensors.
-
-    Sphere is placed at z=50 by default (beyond clip_near=10.0).
-    """
-    n_lat = subdivisions
-    n_lon = subdivisions * 2
-
-    vertices = []
-    uvs = []
-
-    cx, cy, cz = center
-    for i in range(n_lat + 1):
-        theta = np.pi * i / n_lat
-        for j in range(n_lon + 1):
-            phi = 2 * np.pi * j / n_lon
-            x = cx + radius * np.sin(theta) * np.cos(phi)
-            y = cy + radius * np.sin(theta) * np.sin(phi)
-            z = cz + radius * np.cos(theta)
-            vertices.append([x, y, z])
-            uvs.append([j / n_lon, i / n_lat])
-
-    faces = []
-    for i in range(n_lat):
-        for j in range(n_lon):
-            v0 = i * (n_lon + 1) + j
-            v1 = v0 + 1
-            v2 = (i + 1) * (n_lon + 1) + j
-            v3 = v2 + 1
-            # Winding order: outward-facing normals for sphere
-            faces.append([v0, v2, v1])
-            faces.append([v1, v2, v3])
-
-    vertices = torch.tensor(vertices, dtype=torch.float32)
-    faces = torch.tensor(faces, dtype=torch.int32)
-    uvs_t = torch.tensor(uvs, dtype=torch.float32)
-
-    return vertices, faces, uvs_t
-
-
-def _compute_normals(vertices, faces):
-    """Compute per-vertex normals from vertices and faces."""
-    v0 = vertices[faces[:, 0].long()]
-    v1 = vertices[faces[:, 1].long()]
-    v2 = vertices[faces[:, 2].long()]
-
-    face_normals = torch.cross(v1 - v0, v2 - v0, dim=-1)
-    face_normals = face_normals / (face_normals.norm(dim=-1, keepdim=True) + 1e-8)
-
-    vertex_normals = torch.zeros_like(vertices)
-    for fi in range(faces.shape[0]):
-        for vi in range(3):
-            vertex_normals[faces[fi, vi].long()] += face_normals[fi]
-
-    vertex_normals = vertex_normals / (vertex_normals.norm(dim=-1, keepdim=True) + 1e-8)
-    return vertex_normals
+from helpers import make_sphere_mesh as _make_sphere_mesh, compute_normals as _compute_normals
 
 
 def _make_test_scene_data(tex_res=32, screen_size=64):

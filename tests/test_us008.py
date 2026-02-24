@@ -16,7 +16,7 @@ import numpy as np
 @pytest.fixture
 def mi():
     """Import mitsuba with variant set."""
-    from NextFace.mitsuba_variant import ensure_variant
+    from NextFace.variant_mitsuba import ensure_variant
     ensure_variant()
     import mitsuba as mi
     return mi

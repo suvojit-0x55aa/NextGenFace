@@ -12,7 +12,7 @@ import torch
 import math
 import mitsuba as mi
 
-from mitsuba_variant import ensure_variant
+from variant_mitsuba import ensure_variant
 from scene_mitsuba import build_scenes
 from render_mitsuba import render_scenes, render_albedo
 from gradient_bridge import differentiable_render

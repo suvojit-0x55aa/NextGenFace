@@ -2,7 +2,9 @@ from sphericalharmonics import SphericalHarmonics
 from morphablemodel import MorphableModel
 from renderer_mitsuba import Renderer
 from camera import Camera
-from utils import *
+from utils import saveLandmarksVerticesProjections
+import torch
+import cv2
 
 class Pipeline:
 
