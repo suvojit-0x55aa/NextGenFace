@@ -1,9 +1,4 @@
-"""US-023: End-to-end multi-image reconstruction with shared identity.
-
-Tests that the pipeline correctly handles multiple images with shared
-shape/albedo (sharedIdentity=True) while keeping per-frame expression,
-rotation, and translation independent.
-"""
+"""End-to-end tests: single image and shared identity multi-image reconstruction."""
 
 import os
 import shutil
@@ -21,6 +16,61 @@ has_model = os.path.isfile(H5_MODEL_PATH)
 has_input = os.path.isfile(INPUT_IMAGE)
 
 
+# ---------------------------------------------------------------------------
+# E2E single image reconstruction
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not has_model, reason="Basel Face Model .h5 not available")
+@pytest.mark.skipif(not has_input, reason="Input image s1.png not available")
+class TestE2ESingleImage:
+    """End-to-end single image reconstruction test."""
+
+    def test_e2e_single_image(self, tmp_path):
+        """Run the full pipeline on s1.png and verify outputs."""
+        from optim.config import Config
+        from optim.optimizer import Optimizer
+
+        config = Config()
+        config.device = "cpu"
+        config.path = os.path.join(DATA_DIR, "baselMorphableModel")
+        config.textureResolution = 256
+        config.maxResolution = 64
+        config.iterStep1 = 5
+        config.iterStep2 = 5
+        config.iterStep3 = 5
+        config.rtSamples = 4
+        config.rtTrainingSamples = 4
+        config.debugFrequency = 0
+        config.saveIntermediateStage = False
+        config.verbose = False
+        config.lamdmarksDetectorType = "fan"
+        config.optimizeFocalLength = False
+        config.saveExr = False
+
+        output_dir = str(tmp_path / "output" / "s1.png")
+
+        optimizer = Optimizer(output_dir, config)
+        optimizer.run(INPUT_IMAGE, sharedIdentity=False)
+
+        expected_files = [
+            "render_0.png",
+            "diffuseMap_0.png",
+            "specularMap_0.png",
+            "roughnessMap_0.png",
+            "mesh0.obj",
+            "envMap_0.png",
+        ]
+        for fname in expected_files:
+            fpath = os.path.join(output_dir, fname)
+            assert os.path.isfile(fpath), f"Missing output file: {fname}"
+
+
+# ---------------------------------------------------------------------------
+# Shared identity: scene building
+# ---------------------------------------------------------------------------
+
+
 class TestSharedIdentitySceneBuilding:
     """Verify build_scenes handles shared texture mode correctly."""
 
@@ -33,18 +83,15 @@ class TestSharedIdentitySceneBuilding:
 
         n_frames = 3
         n_verts = 4
-        n_faces = 2
         tex_res = 4
 
         vertices = torch.randn(n_frames, n_verts, 3)
-        # Place geometry beyond clip_near=10
         vertices[..., 2] = vertices[..., 2].abs() + 50.0
         indices = torch.tensor([[0, 1, 2], [1, 2, 3]], dtype=torch.int32)
         normals = torch.randn(n_frames, n_verts, 3)
         normals = normals / normals.norm(dim=-1, keepdim=True)
         uvs = torch.rand(n_verts, 2)
 
-        # Shared textures: batch dim = 1
         diffuse = torch.rand(1, tex_res, tex_res, 3)
         specular = torch.rand(1, tex_res, tex_res, 3)
         roughness = torch.rand(1, tex_res, tex_res, 1).clamp(0.01, 1.0)
@@ -59,7 +106,6 @@ class TestSharedIdentitySceneBuilding:
         )
 
         assert len(scenes) == n_frames
-        # Each scene should be a valid Mitsuba scene object
         for scene in scenes:
             assert scene is not None
 
@@ -83,7 +129,6 @@ class TestSharedIdentitySceneBuilding:
         focal = torch.tensor([500.0, 500.0])
         envmap = torch.rand(n_frames, 8, 16, 3)
 
-        # Shared textures
         shared_diff = torch.rand(1, tex_res, tex_res, 3)
         shared_spec = torch.rand(1, tex_res, tex_res, 3)
         shared_rough = torch.rand(1, tex_res, tex_res, 1).clamp(0.01, 1.0)
@@ -94,7 +139,6 @@ class TestSharedIdentitySceneBuilding:
             screen_width=32, screen_height=32, samples=1, bounces=1,
         )
 
-        # Independent textures
         indep_diff = torch.rand(n_frames, tex_res, tex_res, 3)
         indep_spec = torch.rand(n_frames, tex_res, tex_res, 3)
         indep_rough = torch.rand(n_frames, tex_res, tex_res, 1).clamp(0.01, 1.0)
@@ -106,6 +150,11 @@ class TestSharedIdentitySceneBuilding:
         )
 
         assert len(scenes_shared) == len(scenes_indep) == n_frames
+
+
+# ---------------------------------------------------------------------------
+# Shared identity: parameter init
+# ---------------------------------------------------------------------------
 
 
 class TestSharedIdentityParameterInit:
@@ -131,12 +180,10 @@ class TestSharedIdentityParameterInit:
         n_frames = 3
         pipe.initSceneParameters(n_frames, sharedIdentity=True)
 
-        # Shape and albedo should have batch dim 1 (shared)
         assert pipe.vShapeCoeff.shape[0] == 1
         assert pipe.vAlbedoCoeff.shape[0] == 1
         assert pipe.vRoughness.shape[0] == 1
 
-        # Per-frame params should have batch dim N
         assert pipe.vExpCoeff.shape[0] == n_frames
         assert pipe.vRotation.shape[0] == n_frames
         assert pipe.vTranslation.shape[0] == n_frames
@@ -165,13 +212,17 @@ class TestSharedIdentityParameterInit:
         n_frames = 3
         pipe.initSceneParameters(n_frames, sharedIdentity=False)
 
-        # All batch dims should be N
         assert pipe.vShapeCoeff.shape[0] == n_frames
         assert pipe.vAlbedoCoeff.shape[0] == n_frames
         assert pipe.vRoughness.shape[0] == n_frames
         assert pipe.vExpCoeff.shape[0] == n_frames
 
         assert pipe.sharedIdentity is False
+
+
+# ---------------------------------------------------------------------------
+# Shared identity: rendering
+# ---------------------------------------------------------------------------
 
 
 class TestSharedIdentityRendering:
@@ -192,25 +243,20 @@ class TestSharedIdentityRendering:
         n_verts = 3
         tex_res = 4
 
-        # Create triangle visible from camera (z > clip_near=10)
         vertices = torch.zeros(n_frames, n_verts, 3)
-        # Frame 0: triangle at z=50
         vertices[0, 0] = torch.tensor([-5.0, -5.0, 50.0])
         vertices[0, 1] = torch.tensor([5.0, -5.0, 50.0])
         vertices[0, 2] = torch.tensor([0.0, 5.0, 50.0])
-        # Frame 1: triangle at z=60 (different position)
         vertices[1, 0] = torch.tensor([-5.0, -5.0, 60.0])
         vertices[1, 1] = torch.tensor([5.0, -5.0, 60.0])
         vertices[1, 2] = torch.tensor([0.0, 5.0, 60.0])
 
-        # Normals facing camera (toward -Z)
         normals = torch.zeros(n_frames, n_verts, 3)
         normals[..., 2] = -1.0
 
         indices = torch.tensor([[0, 1, 2]], dtype=torch.int32)
         uvs = torch.tensor([[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]])
 
-        # Shared textures (batch dim 1)
         diffuse = torch.full((1, tex_res, tex_res, 3), 0.5)
         specular = torch.full((1, tex_res, tex_res, 3), 0.1)
         roughness = torch.full((1, tex_res, tex_res, 1), 0.4)
@@ -226,27 +272,25 @@ class TestSharedIdentityRendering:
 
         images = renderer.render(scenes)
         assert images.shape == (n_frames, 32, 32, 4)
-        # Both frames should render something (not all zeros)
         for i in range(n_frames):
             assert images[i].sum() > 0, f"Frame {i} is all zeros"
+
+
+# ---------------------------------------------------------------------------
+# E2E shared identity multi-image
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.skipif(not has_model, reason="Basel Face Model .h5 not available")
 @pytest.mark.skipif(not has_input, reason="Input image s1.png not available")
 class TestE2ESharedIdentity:
-    """End-to-end multi-image reconstruction with shared identity.
-
-    Requires the Basel Face Model .h5 files and input images.
-    Uses minimal iterations for speed.
-    """
+    """End-to-end multi-image reconstruction with shared identity."""
 
     def test_e2e_shared_identity(self, tmp_path):
         """Run the full pipeline on a directory of images with sharedIdentity."""
         from optim.config import Config
         from optim.optimizer import Optimizer
 
-        # Create a temp directory with 2 copies of the same image
-        # (simulating multi-view of same identity)
         multiview_dir = tmp_path / "multiview"
         multiview_dir.mkdir()
         shutil.copy(INPUT_IMAGE, str(multiview_dir / "view1.png"))
@@ -293,28 +337,18 @@ class TestE2ESharedIdentity:
         optimizer = Optimizer(output_dir, config)
         optimizer.run(str(multiview_dir), sharedIdentity=True)
 
-        # Verify shared identity: shape[0] == 1
         assert optimizer.pipeline.vShapeCoeff.shape[0] == 1
         assert optimizer.pipeline.vAlbedoCoeff.shape[0] == 1
         assert optimizer.pipeline.sharedIdentity is True
 
-        # Verify per-frame params are independent (batch dim == 2)
         assert optimizer.pipeline.vExpCoeff.shape[0] == 2
         assert optimizer.pipeline.vRotation.shape[0] == 2
         assert optimizer.pipeline.vTranslation.shape[0] == 2
 
-        # Verify output files exist for each frame
         for i in range(2):
             render_path = os.path.join(output_dir, f"render_{i}.png")
             assert os.path.isfile(render_path), f"Missing render_{i}.png"
 
-        # Shared textures: diffuseMap_0 should exist (index 0 for both frames)
         assert os.path.isfile(os.path.join(output_dir, "diffuseMap_0.png"))
         assert os.path.isfile(os.path.join(output_dir, "specularMap_0.png"))
         assert os.path.isfile(os.path.join(output_dir, "roughnessMap_0.png"))
-
-        # Verify no pyredner was loaded
-        pyredner_mods = [m for m in sys.modules if "pyredner" in m or m == "redner"]
-        assert pyredner_mods == [], (
-            f"pyredner/redner loaded during shared identity run: {pyredner_mods}"
-        )

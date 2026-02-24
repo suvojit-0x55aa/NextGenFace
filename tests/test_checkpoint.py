@@ -1,8 +1,4 @@
-"""US-024: Checkpoint save/load round-trip tests.
-
-Tests that saveParameters() and loadParameters() correctly serialize and
-deserialize all optimization parameters via pickle.
-"""
+"""Tests for checkpoint save/load round-trip."""
 
 import os
 import pickle
@@ -29,7 +25,6 @@ class MockPipeline:
         self.sharedIdentity = True
         self.device = device
 
-        # Core parameters (always saved)
         self.vShapeCoeff = torch.randn(1, 199, device=device)
         self.vAlbedoCoeff = torch.randn(1, 199, device=device)
         self.vExpCoeff = torch.randn(n_frames, 100, device=device)
@@ -114,7 +109,7 @@ class MockOptimizer:
         self.pipeline.vShCoeffs.requires_grad = True
 
 
-def test_us024_checkpoint_roundtrip():
+def test_checkpoint_roundtrip():
     """Save parameters, load into fresh optimizer, verify all values match."""
     opt1 = MockOptimizer(device="cpu", n_frames=3)
     opt1.pipeline.renderer.screenWidth = 512
@@ -126,11 +121,9 @@ def test_us024_checkpoint_roundtrip():
     try:
         opt1.saveParameters(path)
 
-        # Load into a fresh optimizer with different initial values
         opt2 = MockOptimizer(device="cpu", n_frames=3)
         opt2.loadParameters(path)
 
-        # Core tensors match
         for attr in [
             "vShapeCoeff",
             "vAlbedoCoeff",
@@ -146,19 +139,17 @@ def test_us024_checkpoint_roundtrip():
                 orig, loaded, atol=1e-6
             ), f"{attr} mismatch after round-trip"
 
-        # Renderer state preserved
         assert opt2.pipeline.renderer.screenWidth == 512
         assert opt2.pipeline.renderer.screenHeight == 384
         assert opt2.pipeline.sharedIdentity is True
 
-        # Gradients enabled after load
         assert opt2.pipeline.vShapeCoeff.requires_grad
         assert opt2.pipeline.vExpCoeff.requires_grad
     finally:
         os.unlink(path)
 
 
-def test_us024_checkpoint_with_enhanced_textures():
+def test_checkpoint_with_enhanced_textures():
     """Verify enhanced texture tensors (stage 3) survive round-trip."""
     opt1 = MockOptimizer(device="cpu")
     opt1.vEnhancedDiffuse = torch.randn(1, 256, 256, 3)
@@ -172,7 +163,7 @@ def test_us024_checkpoint_with_enhanced_textures():
         opt1.saveParameters(path)
 
         opt2 = MockOptimizer(device="cpu")
-        assert opt2.vEnhancedDiffuse is None  # Initially None
+        assert opt2.vEnhancedDiffuse is None
         opt2.loadParameters(path)
 
         assert opt2.vEnhancedDiffuse is not None
@@ -189,10 +180,9 @@ def test_us024_checkpoint_with_enhanced_textures():
         os.unlink(path)
 
 
-def test_us024_checkpoint_without_enhanced_textures():
+def test_checkpoint_without_enhanced_textures():
     """Verify loading a stage 1/2 checkpoint (no enhanced textures) works."""
     opt1 = MockOptimizer(device="cpu")
-    # No enhanced textures set (stage 1 or 2 checkpoint)
 
     with tempfile.NamedTemporaryFile(suffix=".pickle", delete=False) as f:
         path = f.name
@@ -210,11 +200,10 @@ def test_us024_checkpoint_without_enhanced_textures():
         os.unlink(path)
 
 
-def test_us024_resume_from_checkpoint():
+def test_resume_from_checkpoint():
     """Simulate interrupted+resumed optimization: save at iteration N, load, verify state."""
     opt = MockOptimizer(device="cpu", n_frames=1)
 
-    # Simulate some optimization steps by modifying params
     with torch.no_grad():
         opt.pipeline.vShapeCoeff[:] = 42.0
         opt.pipeline.vRotation[:] = torch.tensor([0.1, 0.2, 0.3])
@@ -227,11 +216,9 @@ def test_us024_resume_from_checkpoint():
     try:
         opt.saveParameters(path)
 
-        # "Resume": create fresh optimizer and load checkpoint
         opt_resumed = MockOptimizer(device="cpu", n_frames=1)
         opt_resumed.loadParameters(path)
 
-        # Verify specific values survived
         assert torch.allclose(
             opt_resumed.pipeline.vShapeCoeff,
             torch.full((1, 199), 42.0),
@@ -245,14 +232,13 @@ def test_us024_resume_from_checkpoint():
         assert opt_resumed.pipeline.renderer.screenWidth == 640
         assert opt_resumed.pipeline.renderer.screenHeight == 480
 
-        # Verify gradients are enabled (ready for continued optimization)
         assert opt_resumed.pipeline.vShapeCoeff.requires_grad
         assert opt_resumed.pipeline.vRotation.requires_grad
     finally:
         os.unlink(path)
 
 
-def test_us024_pickle_file_valid():
+def test_pickle_file_valid():
     """Verify saved file is a valid pickle with expected keys."""
     opt = MockOptimizer(device="cpu")
 
@@ -281,7 +267,6 @@ def test_us024_pickle_file_valid():
             set(data.keys())
         ), f"Missing keys: {expected_keys - set(data.keys())}"
 
-        # All tensor values are numpy arrays
         for key in [
             "vShapeCoeff",
             "vAlbedoCoeff",
@@ -293,7 +278,6 @@ def test_us024_pickle_file_valid():
         ]:
             assert isinstance(data[key], np.ndarray), f"{key} should be numpy array"
 
-        # Scalar values are correct types
         assert isinstance(data["screenWidth"], int)
         assert isinstance(data["screenHeight"], int)
         assert isinstance(data["sharedIdentity"], bool)

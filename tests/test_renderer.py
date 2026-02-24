@@ -1,8 +1,5 @@
-"""US-026: Achieve 60% test coverage on renderer_mitsuba.py.
+"""Tests for Renderer class: attributes, setupCamera, build+render, albedo."""
 
-Tests all public methods and edge cases: single triangle, zero roughness,
-renderAlbedo without cached params, and coverage verification.
-"""
 import math
 
 import torch
@@ -16,18 +13,13 @@ import mitsuba as mi
 
 from rendering.renderer import Renderer
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 from helpers import make_single_triangle as _make_single_triangle
 from helpers import make_textures as _make_textures
 from helpers import make_envmap as _make_envmap
 
 
 # ---------------------------------------------------------------------------
-# Tests: Constructor and attributes
+# Constructor and attributes
 # ---------------------------------------------------------------------------
 
 class TestRendererAttributes:
@@ -58,7 +50,7 @@ class TestRendererAttributes:
 
 
 # ---------------------------------------------------------------------------
-# Tests: setupCamera
+# setupCamera
 # ---------------------------------------------------------------------------
 
 class TestSetupCamera:
@@ -78,7 +70,7 @@ class TestSetupCamera:
 
 
 # ---------------------------------------------------------------------------
-# Tests: buildScenes + render (single triangle)
+# buildScenes + render (single triangle)
 # ---------------------------------------------------------------------------
 
 class TestBuildAndRender:
@@ -93,9 +85,8 @@ class TestBuildAndRender:
         envmap = _make_envmap()
         focal = torch.tensor([300.0])
 
-        # Batch dim
-        verts = verts.unsqueeze(0)      # [1, 3, 3]
-        normals = normals.unsqueeze(0)   # [1, 3, 3]
+        verts = verts.unsqueeze(0)
+        normals = normals.unsqueeze(0)
 
         scenes = r.buildScenes(verts, indices, normals, uvs,
                                diffuse, specular, roughness, focal, envmap)
@@ -107,7 +98,7 @@ class TestBuildAndRender:
         assert r.counter == 1
 
     def test_counter_increments(self):
-        """Render twice → counter == 2."""
+        """Render twice -> counter == 2."""
         r = Renderer(4, 1, "cpu")
         r.screenWidth = 16
         r.screenHeight = 16
@@ -135,7 +126,6 @@ class TestBuildAndRender:
 
         verts, indices, normals, uvs = _make_single_triangle()
         diffuse, specular, _ = _make_textures()
-        # Near-zero roughness
         roughness = torch.full((1, 4, 4, 1), 1e-6, dtype=torch.float32)
         envmap = _make_envmap()
         focal = torch.tensor([300.0])
@@ -152,7 +142,7 @@ class TestBuildAndRender:
 
 
 # ---------------------------------------------------------------------------
-# Tests: renderAlbedo
+# renderAlbedo
 # ---------------------------------------------------------------------------
 
 class TestRenderAlbedo:
@@ -181,7 +171,6 @@ class TestRenderAlbedo:
         r.screenWidth = 16
         r.screenHeight = 16
 
-        # Build scenes manually (bypass buildScenes to avoid caching)
         from rendering._scene import build_scenes
 
         verts, indices, normals, uvs = _make_single_triangle()
@@ -192,7 +181,6 @@ class TestRenderAlbedo:
         verts = verts.unsqueeze(0)
         normals = normals.unsqueeze(0)
 
-        # Build albedo scenes directly
         albedo_scenes = build_scenes(
             verts, indices, normals, uvs, diffuse, specular,
             roughness, focal, envmap,
@@ -200,39 +188,5 @@ class TestRenderAlbedo:
             samples=r.samples, bounces=r.bounces, albedo_mode=True,
         )
 
-        # Call renderAlbedo WITHOUT ever calling buildScenes (no cached params)
         albedo = r.renderAlbedo(albedo_scenes)
         assert albedo.shape == (1, 16, 16, 4)
-
-
-# ---------------------------------------------------------------------------
-# Tests: all public methods have at least one test
-# ---------------------------------------------------------------------------
-
-class TestPublicAPI:
-    def test_all_public_methods_exist(self):
-        """Verify Renderer exposes all expected public methods."""
-        r = Renderer(4, 1, "cpu")
-        assert callable(getattr(r, "setupCamera", None))
-        assert callable(getattr(r, "buildScenes", None))
-        assert callable(getattr(r, "render", None))
-        assert callable(getattr(r, "renderAlbedo", None))
-
-
-# ---------------------------------------------------------------------------
-# Tests: coverage threshold
-# ---------------------------------------------------------------------------
-
-class TestCoverageThreshold:
-    def test_coverage_at_least_60_percent(self):
-        """Meta-test: renderer_mitsuba.py has >= 60% coverage.
-
-        This test is a marker — the real coverage check is done via
-        `pytest --cov=renderer_mitsuba --cov-fail-under=60`.
-        """
-        # Read the source and count executable lines vs tested paths
-        import rendering.renderer as renderer_mitsuba
-        import inspect
-        source = inspect.getsource(renderer_mitsuba.Renderer)
-        # Basic sanity: the class has substantial code
-        assert len(source.splitlines()) > 50

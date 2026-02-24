@@ -1,9 +1,9 @@
-"""Tests for US-002: Mitsuba 3 variant selection utility."""
+"""Tests for Mitsuba 3 variant selection utility."""
 
 import mitsuba as mi
 
 
-def test_us002_variant_returns_string():
+def test_variant_returns_string():
     """ensure_variant() returns a valid variant string."""
     from rendering._variant import ensure_variant
 
@@ -12,7 +12,7 @@ def test_us002_variant_returns_string():
     assert result in ("cuda_ad_rgb", "llvm_ad_rgb", "scalar_rgb")
 
 
-def test_us002_variant_idempotent():
+def test_variant_idempotent():
     """Calling ensure_variant() twice returns the same result without error."""
     from rendering._variant import ensure_variant
 
@@ -21,7 +21,7 @@ def test_us002_variant_idempotent():
     assert first == second
 
 
-def test_us002_variant_is_active():
+def test_variant_is_active():
     """After ensure_variant(), mi.variant() matches the returned value."""
     from rendering._variant import ensure_variant
 
@@ -29,7 +29,7 @@ def test_us002_variant_is_active():
     assert mi.variant() == variant
 
 
-def test_us002_variant_priority():
+def test_variant_priority():
     """Variant selection respects priority: cuda_ad_rgb > llvm_ad_rgb > scalar_rgb."""
     from rendering._variant import _VARIANT_PRIORITY
 
