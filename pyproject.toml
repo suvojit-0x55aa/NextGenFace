@@ -26,7 +26,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = [
+    "src/nextface",
+    "src/rendering",
+    "src/facemodel",
+    "src/geometry",
+    "src/landmarks",
+    "src/imaging",
+    "src/optim",
+]
+
+[project.scripts]
+nextface-reconstruct = "nextface.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
