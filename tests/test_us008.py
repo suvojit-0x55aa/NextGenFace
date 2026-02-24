@@ -16,7 +16,7 @@ import numpy as np
 @pytest.fixture
 def mi():
     """Import mitsuba with variant set."""
-    from NextFace.variant_mitsuba import ensure_variant
+    from rendering._variant import ensure_variant
     ensure_variant()
     import mitsuba as mi
     return mi
@@ -63,7 +63,7 @@ def test_us008_uv_flip_applied(mi):
     and verify the stored texture coordinates reflect the flip exactly
     as pipeline.py would produce it.
     """
-    from NextFace.mesh_mitsuba import build_mesh
+    from rendering._mesh import build_mesh
 
     vertices = torch.tensor([
         [-1.0, -1.0, 5.0],

@@ -8,17 +8,12 @@ These tests verify the optimization loop converges correctly using
 synthetic data that mimics the real Pipeline's Step 1 flow.
 """
 
-import sys
-import os
 import math
 import torch
 import numpy as np
 import pytest
 
-# Add NextFace to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
-
-from camera import Camera
+from geometry.camera import Camera
 
 
 def _project_landmarks(camera_vertices, landmark_indices, focals, centers):

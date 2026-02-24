@@ -30,4 +30,4 @@ packages = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
-pythonpath = ["src", "NextFace", "tests"]
+pythonpath = ["src", "tests"]

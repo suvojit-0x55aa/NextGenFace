@@ -3,12 +3,12 @@
 import pytest
 import torch
 
-from NextFace.variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 ensure_variant()
 
 import mitsuba as mi
-from NextFace.envmap_mitsuba import build_envmap
+from rendering._envmap import build_envmap
 
 
 class TestBuildEnvmap:

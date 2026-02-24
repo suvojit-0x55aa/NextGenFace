@@ -3,22 +3,18 @@
 Tests all public methods and edge cases: single triangle, zero roughness,
 renderAlbedo without cached params, and coverage verification.
 """
-import sys
-import os
 import math
 
 import torch
 import numpy as np
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 ensure_variant()
 import mitsuba as mi
 
-from renderer_mitsuba import Renderer
+from rendering.renderer import Renderer
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +182,7 @@ class TestRenderAlbedo:
         r.screenHeight = 16
 
         # Build scenes manually (bypass buildScenes to avoid caching)
-        from scene_mitsuba import build_scenes
+        from rendering._scene import build_scenes
 
         verts, indices, normals, uvs = _make_single_triangle()
         diffuse, specular, roughness = _make_textures()
@@ -235,7 +231,7 @@ class TestCoverageThreshold:
         `pytest --cov=renderer_mitsuba --cov-fail-under=60`.
         """
         # Read the source and count executable lines vs tested paths
-        import renderer_mitsuba
+        import rendering.renderer as renderer_mitsuba
         import inspect
         source = inspect.getsource(renderer_mitsuba.Renderer)
         # Basic sanity: the class has substantial code

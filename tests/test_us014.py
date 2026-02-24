@@ -4,16 +4,11 @@ Tests that gradients flow from Mitsuba rendered images back to PyTorch
 tensors via custom autograd.Function, enabling optimization with torch.optim.
 """
 
-import sys
-import os
-
 import pytest
 import torch
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +60,7 @@ def _make_color_scene(color=(0.5, 0.5, 0.5), size=16):
 
 def test_us014_gradient_flows_to_params():
     """Gradients flow from rendered image back to scene parameters."""
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     scene = _make_color_scene(color=(0.5, 0.5, 0.5), size=16)
 
@@ -85,7 +80,7 @@ def test_us014_gradient_flows_to_params():
 def test_us014_color_optimization_converges():
     """Optimize a diffuse color to match a target rendering."""
     import mitsuba as mi
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     target_rgb = [0.8, 0.2, 0.1]
     size = 16

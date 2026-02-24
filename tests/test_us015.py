@@ -4,16 +4,11 @@ Tests that gradients w.r.t. vertex positions are correct so that
 shape optimization works in the NextFace pipeline.
 """
 
-import sys
-import os
-
 import pytest
 import torch
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -95,7 +90,7 @@ def _make_mesh_scene(vertices_np, faces_np, size=32, near_clip=0.1):
 def test_us015_vertex_grad_nonzero():
     """Gradients w.r.t. vertex positions are non-zero for visible vertices
     and zero for occluded (behind-camera) vertices."""
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     # 6 vertices, 2 triangles:
     #   Triangle 0 (v0-v2): visible, in front of camera at z=3
@@ -146,7 +141,7 @@ def test_us015_vertex_grad_nonzero():
 def test_us015_vertex_grad_finite_diff():
     """Analytic vertex gradient matches finite difference approximation."""
     import mitsuba as mi
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     # Single visible triangle
     vertices = np.array(

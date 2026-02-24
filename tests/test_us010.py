@@ -4,20 +4,15 @@ Tests that SphericalHarmonics.toEnvMap() output integrates correctly with
 build_envmap() and that SH band 0 produces expected uniform illumination.
 """
 
-import sys
-import os
 import math
 
 import pytest
 import torch
 import numpy as np
 
-# Ensure NextFace package is importable
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from sphericalharmonics import SphericalHarmonics
-from envmap_mitsuba import build_envmap
-from variant_mitsuba import ensure_variant
+from geometry.sphericalharmonics import SphericalHarmonics
+from rendering._envmap import build_envmap
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)

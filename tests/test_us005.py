@@ -21,7 +21,7 @@ import numpy as np
 @pytest.fixture
 def mi():
     """Import mitsuba with variant set."""
-    from NextFace.variant_mitsuba import ensure_variant
+    from rendering._variant import ensure_variant
     ensure_variant()
     import mitsuba as mi
     return mi
@@ -33,7 +33,7 @@ def test_us005_origin_projects_to_center(mi):
     We render a small bright sphere centered at (0, 0, 20) and verify that
     the brightest pixel region is near the image center.
     """
-    from NextFace.camera_mitsuba import build_camera
+    from rendering._camera import build_camera
 
     W, H = 64, 64
     focal = 300.0  # arbitrary focal length
@@ -85,7 +85,7 @@ def test_us005_up_vector_orientation(mi):
     The sphere at negative Y should appear in the top half of the image,
     and the sphere at positive Y should appear in the bottom half.
     """
-    from NextFace.camera_mitsuba import build_camera
+    from rendering._camera import build_camera
 
     W, H = 64, 64
     focal = 50.0  # shorter focal for wider FOV so off-center spheres are visible
@@ -159,7 +159,7 @@ def test_us005_no_coord_transform_needed(mi):
     camera_mitsuba module does NOT define a coord_transform function
     (because none is needed).
     """
-    import NextFace.camera_mitsuba as cam_mod
+    import rendering._camera as cam_mod
 
     # No coord_transform should be needed
     assert not hasattr(cam_mod, "coord_transform"), (
@@ -168,7 +168,7 @@ def test_us005_no_coord_transform_needed(mi):
 
     # Verify the camera conventions match original:
     # origin at (0,0,0), looking at +Z, up=(0,-1,0)
-    from NextFace.camera_mitsuba import build_camera
+    from rendering._camera import build_camera
 
     cam = build_camera(focal=500.0, width=256, height=256)
     assert cam["type"] == "perspective"

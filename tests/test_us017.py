@@ -1,15 +1,11 @@
 """US-017: Verify new Renderer class has matching API."""
 
-import sys
-import os
 import inspect
 
 import pytest
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
-
-from renderer_mitsuba import Renderer
+from rendering.renderer import Renderer
 
 
 class TestRendererAPICompatible:

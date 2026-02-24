@@ -4,16 +4,11 @@ Tests that gradients w.r.t. texture values (diffuse, specular, roughness)
 are correct so that albedo optimization works in the NextFace pipeline.
 """
 
-import sys
-import os
-
 import pytest
 import torch
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -191,7 +186,7 @@ def _make_roughness_texture_scene(diffuse_val, roughness_np, size=32):
 def test_us016_texture_grad_nonzero():
     """Gradients flow through diffuse, specular, and roughness textures."""
     import mitsuba as mi
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     tex_h, tex_w = 4, 4
 
@@ -290,7 +285,7 @@ def test_us016_texture_grad_nonzero():
 def test_us016_diffuse_grad_finite_diff():
     """Analytic diffuse texture gradient matches finite difference approximation."""
     import mitsuba as mi
-    from gradient_bridge import differentiable_render
+    from rendering._gradient_bridge import differentiable_render
 
     tex_h, tex_w = 4, 4
     size = 16

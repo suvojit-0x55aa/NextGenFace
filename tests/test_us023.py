@@ -12,14 +12,11 @@ import sys
 import pytest
 import torch
 
-# Ensure NextFace is importable
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-NEXTFACE_DIR = os.path.join(os.path.dirname(__file__), "..", "NextFace")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 H5_MODEL_PATH = os.path.join(
-    NEXTFACE_DIR, "baselMorphableModel", "model2017-1_face12_nomouth.h5"
+    DATA_DIR, "baselMorphableModel", "model2017-1_face12_nomouth.h5"
 )
-INPUT_IMAGE = os.path.join(NEXTFACE_DIR, "input", "s1.png")
+INPUT_IMAGE = os.path.join(DATA_DIR, "input", "s1.png")
 has_model = os.path.isfile(H5_MODEL_PATH)
 has_input = os.path.isfile(INPUT_IMAGE)
 
@@ -29,8 +26,8 @@ class TestSharedIdentitySceneBuilding:
 
     def test_shared_texture_builds_n_scenes(self):
         """When diffuse.shape[0]==1, build_scenes still creates N scenes."""
-        from variant_mitsuba import ensure_variant
-        from scene_mitsuba import build_scenes
+        from rendering._variant import ensure_variant
+        from rendering._scene import build_scenes
 
         ensure_variant()
 
@@ -68,8 +65,8 @@ class TestSharedIdentitySceneBuilding:
 
     def test_shared_vs_independent_texture_scenes(self):
         """Shared texture mode (1,H,W,3) vs independent (N,H,W,3) both work."""
-        from variant_mitsuba import ensure_variant
-        from scene_mitsuba import build_scenes
+        from rendering._variant import ensure_variant
+        from rendering._scene import build_scenes
 
         ensure_variant()
 
@@ -117,12 +114,12 @@ class TestSharedIdentityParameterInit:
     @pytest.mark.skipif(not has_model, reason="Basel Face Model .h5 not available")
     def test_shared_identity_shape_coeffs_dim_1(self):
         """With sharedIdentity=True, shape and albedo coefficients have batch dim 1."""
-        from config import Config
-        from pipeline import Pipeline
+        from optim.config import Config
+        from optim.pipeline import Pipeline
 
         config = Config()
         config.device = "cpu"
-        config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
+        config.path = os.path.join(DATA_DIR, "baselMorphableModel")
         config.textureResolution = 256
         config.rtTrainingSamples = 1
         config.lamdmarksDetectorType = "fan"
@@ -151,12 +148,12 @@ class TestSharedIdentityParameterInit:
     @pytest.mark.skipif(not has_model, reason="Basel Face Model .h5 not available")
     def test_non_shared_identity_all_dims_n(self):
         """Without sharedIdentity, all coefficients have batch dim N."""
-        from config import Config
-        from pipeline import Pipeline
+        from optim.config import Config
+        from optim.pipeline import Pipeline
 
         config = Config()
         config.device = "cpu"
-        config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
+        config.path = os.path.join(DATA_DIR, "baselMorphableModel")
         config.textureResolution = 256
         config.rtTrainingSamples = 1
         config.lamdmarksDetectorType = "fan"
@@ -182,8 +179,8 @@ class TestSharedIdentityRendering:
 
     def test_renderer_shared_texture_render(self):
         """Renderer.buildScenes + render works with shared textures (batch 1)."""
-        from variant_mitsuba import ensure_variant
-        from renderer_mitsuba import Renderer
+        from rendering._variant import ensure_variant
+        from rendering.renderer import Renderer
 
         ensure_variant()
 
@@ -245,8 +242,8 @@ class TestE2ESharedIdentity:
 
     def test_e2e_shared_identity(self, tmp_path):
         """Run the full pipeline on a directory of images with sharedIdentity."""
-        from config import Config
-        from optimizer import Optimizer
+        from optim.config import Config
+        from optim.optimizer import Optimizer
 
         # Create a temp directory with 2 copies of the same image
         # (simulating multi-view of same identity)
@@ -257,7 +254,7 @@ class TestE2ESharedIdentity:
 
         config = Config()
         config.device = "cpu"
-        config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
+        config.path = os.path.join(DATA_DIR, "baselMorphableModel")
         config.textureResolution = 256
         config.maxResolution = 64
         config.iterStep1 = 3

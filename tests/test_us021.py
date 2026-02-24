@@ -13,12 +13,8 @@ gradient path from morphable model dependencies.
 import pytest
 import torch
 import numpy as np
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +52,7 @@ def test_us021_step3_loss_decreases():
     Verifies that gradients flow through the renderer to all three texture
     types (diffuse, specular, roughness) and that the loss decreases.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
 
@@ -148,7 +144,7 @@ def test_us021_step3_textures_refined():
     variation than the initial statistical prior textures (which are uniform).
     This confirms that the gradient signal actually modifies the texture content.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
 
@@ -228,7 +224,7 @@ def test_us021_step3_all_texture_grads():
     verifies that all three receive non-zero gradients in a single
     forward-backward pass.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
 

@@ -11,12 +11,9 @@ import types
 
 import pytest
 
-# Ensure NextFace is importable
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-NEXTFACE_DIR = os.path.join(os.path.dirname(__file__), "..", "NextFace")
-H5_MODEL_PATH = os.path.join(NEXTFACE_DIR, "baselMorphableModel", "model2017-1_face12_nomouth.h5")
-INPUT_IMAGE = os.path.join(NEXTFACE_DIR, "input", "s1.png")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+H5_MODEL_PATH = os.path.join(DATA_DIR, "baselMorphableModel", "model2017-1_face12_nomouth.h5")
+INPUT_IMAGE = os.path.join(DATA_DIR, "input", "s1.png")
 has_model = os.path.isfile(H5_MODEL_PATH)
 has_input = os.path.isfile(INPUT_IMAGE)
 
@@ -43,8 +40,8 @@ class TestNoPyrednerImports:
         # Clear any cached imports
         mods_before = set(sys.modules.keys())
 
-        # Import pipeline (which now imports renderer_mitsuba)
-        import pipeline  # noqa: F811
+        # Import pipeline (which now imports rendering.renderer)
+        import optim.pipeline as pipeline  # noqa: F811
 
         mods_after = set(sys.modules.keys())
         new_mods = mods_after - mods_before
@@ -56,7 +53,7 @@ class TestNoPyrednerImports:
 
     def test_renderer_mitsuba_no_pyredner(self):
         """renderer_mitsuba.py must not reference pyredner."""
-        import renderer_mitsuba
+        import rendering.renderer as renderer_mitsuba
 
         source_file = renderer_mitsuba.__file__
         with open(source_file) as f:
@@ -66,7 +63,7 @@ class TestNoPyrednerImports:
 
     def test_image_no_pyredner(self):
         """image.py must not reference pyredner."""
-        import image
+        import imaging.image as image
 
         source_file = image.__file__
         with open(source_file) as f:
@@ -76,7 +73,7 @@ class TestNoPyrednerImports:
 
     def test_pipeline_source_no_pyredner(self):
         """pipeline.py source must not reference pyredner."""
-        import pipeline
+        import optim.pipeline as pipeline
 
         source_file = pipeline.__file__
         with open(source_file) as f:
@@ -97,13 +94,13 @@ class TestE2ESingleImage:
     def test_e2e_single_image(self, tmp_path):
         """Run the full pipeline on s1.png and verify outputs."""
         import torch
-        from config import Config
-        from optimizer import Optimizer
+        from optim.config import Config
+        from optim.optimizer import Optimizer
 
         # Create a minimal config for fast test
         config = Config()
         config.device = "cpu"
-        config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
+        config.path = os.path.join(DATA_DIR, "baselMorphableModel")
         config.textureResolution = 256
         config.maxResolution = 64  # tiny resolution for speed
         config.iterStep1 = 5

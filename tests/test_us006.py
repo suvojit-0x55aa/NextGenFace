@@ -3,12 +3,12 @@
 import pytest
 import torch
 
-from NextFace.variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 ensure_variant()
 
 import mitsuba as mi
-from NextFace.mesh_mitsuba import build_mesh
+from rendering._mesh import build_mesh
 
 
 def _make_triangle():

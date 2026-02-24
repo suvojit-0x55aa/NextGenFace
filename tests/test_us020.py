@@ -13,12 +13,8 @@ gradient path from morphable model dependencies.
 import pytest
 import torch
 import numpy as np
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +55,7 @@ def test_us020_step2_loss_decreases():
     Verifies that the gradient bridge correctly propagates gradients from
     rendered images back to texture parameters.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
 
@@ -144,7 +140,7 @@ def test_us020_step2_no_nan():
     multiple parameters (texture + envmap), verifying no NaN in
     output images or computed gradients.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
     renderer = Renderer(samples=4, bounces=1, device='cpu')
@@ -190,7 +186,7 @@ def test_us020_step2_renders_face():
     Verifies the output is not black, not white, has both mesh and
     background regions in the alpha channel, and has correct shape.
     """
-    from renderer_mitsuba import Renderer
+    from rendering.renderer import Renderer
 
     data = _make_test_scene_data(tex_res=32, screen_size=64)
     renderer = Renderer(samples=4, bounces=1, device='cpu')

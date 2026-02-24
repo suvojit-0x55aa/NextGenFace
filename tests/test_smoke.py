@@ -16,7 +16,7 @@ def test_mitsuba_imports():
 def test_minimal_render():
     """Render a 32x32 scene with a single sphere, verify output shape is (32, 32, 3)."""
     import mitsuba as mi
-    from NextFace.variant_mitsuba import ensure_variant
+    from rendering._variant import ensure_variant
 
     ensure_variant()
 
@@ -65,7 +65,7 @@ def test_minimal_render():
 def test_minimal_render_nonzero():
     """Rendered sphere image should have non-zero pixel values (not all black)."""
     import mitsuba as mi
-    from NextFace.variant_mitsuba import ensure_variant
+    from rendering._variant import ensure_variant
 
     ensure_variant()
 

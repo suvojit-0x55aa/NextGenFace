@@ -1,18 +1,14 @@
 """Tests for US-007: Principled BSDF material from texture tensors."""
 
-import sys
-import os
 import pytest
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "NextFace"))
-
-from variant_mitsuba import ensure_variant
+from rendering._variant import ensure_variant
 
 ensure_variant()
 
 import mitsuba as mi
-from material_mitsuba import build_material, _tensor_to_bitmap
+from rendering._material import build_material, _tensor_to_bitmap
 
 
 class TestBuildMaterial:

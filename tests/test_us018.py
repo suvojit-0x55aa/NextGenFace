@@ -1,6 +1,5 @@
 """US-018: saveImage works without pyredner dependency."""
 import os
-import sys
 import tempfile
 
 import cv2
@@ -8,8 +7,7 @@ import numpy as np
 import pytest
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'NextFace'))
-from image import saveImage
+from imaging.image import saveImage
 
 
 def test_us018_save_image_no_pyredner():
