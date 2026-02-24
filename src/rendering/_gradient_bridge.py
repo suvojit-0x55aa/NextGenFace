@@ -68,6 +68,7 @@ class _DiffRender(torch.autograd.Function):
         ctx.spp = spp
         ctx.param_paths = param_paths
         ctx.shapes = [v.shape for v in torch_values]
+        ctx.device = torch_values[0].device if torch_values else torch.device('cpu')
         ctx.save_for_backward(*torch_values)
 
         # Update scene params and render (no AD needed for forward)
@@ -77,7 +78,7 @@ class _DiffRender(torch.autograd.Function):
         params.update()
 
         img = mi.render(scene, spp=spp)
-        return torch.from_numpy(np.array(img).copy()).to(torch.float32)
+        return torch.from_numpy(np.array(img).copy()).to(dtype=torch.float32, device=ctx.device)
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -112,10 +113,11 @@ class _DiffRender(torch.autograd.Function):
         dr.traverse(dr.ADMode.Backward)
 
         # Collect parameter gradients from our AD-tracked values
+        device = ctx.device
         grads = [None, None, None]  # scene, spp, param_paths
         for path, shape in zip(param_paths, shapes):
             g_np = _drjit_grad_to_numpy(ad_values[path], shape)
-            grads.append(torch.from_numpy(g_np))
+            grads.append(torch.from_numpy(g_np).to(device))
 
         return tuple(grads)
 

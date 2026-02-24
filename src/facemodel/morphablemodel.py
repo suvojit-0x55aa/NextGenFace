@@ -46,14 +46,14 @@ class MorphableModel:
             assert(self.file is not None)
 
             print("loading shape basis...")
-            self.shapeMean = torch.Tensor(self.file["shape"]["model"]["mean"]).reshape(-1, 3).to(device).float()
-            self.shapePca = torch.Tensor(self.file["shape"]["model"]["pcaBasis"]).reshape(-1, 3, self.shapeBasisSize).to(device).float().permute(2, 0, 1)
-            self.shapePcaVar = torch.Tensor(self.file["shape"]["model"]["pcaVariance"]).reshape(self.shapeBasisSize).to(device).float()
+            self.shapeMean = torch.from_numpy(np.array(self.file["shape"]["model"]["mean"])).reshape(-1, 3).to(device).float()
+            self.shapePca = torch.from_numpy(np.array(self.file["shape"]["model"]["pcaBasis"])).reshape(-1, 3, self.shapeBasisSize).to(device).float().permute(2, 0, 1)
+            self.shapePcaVar = torch.from_numpy(np.array(self.file["shape"]["model"]["pcaVariance"])).reshape(self.shapeBasisSize).to(device).float()
 
             print("loading expression basis...")
-            self.expressionPca = torch.Tensor(self.file["expression"]["model"]["pcaBasis"]).reshape(-1, 3, self.expBasisSize).to(device).float().permute(2, 0, 1)
-            self.expressionPcaVar = torch.Tensor(self.file["expression"]["model"]["pcaVariance"]).reshape(self.expBasisSize).to(device).float()
-            self.faces = torch.Tensor(np.transpose(self.file["shape"]["representer"]["cells"])).reshape(-1, 3).to(device).long()
+            self.expressionPca = torch.from_numpy(np.array(self.file["expression"]["model"]["pcaBasis"])).reshape(-1, 3, self.expBasisSize).to(device).float().permute(2, 0, 1)
+            self.expressionPcaVar = torch.from_numpy(np.array(self.file["expression"]["model"]["pcaVariance"])).reshape(self.expBasisSize).to(device).float()
+            self.faces = torch.from_numpy(np.array(np.transpose(self.file["shape"]["representer"]["cells"]))).reshape(-1, 3).to(device).long()
             self.file.close()
 
             print("Loading Albedo model from " + pathAlbedoModel + "...")
@@ -64,13 +64,13 @@ class MorphableModel:
             self.file = h5py.File(pathAlbedoModel, 'r')
             assert(self.file is not None)
 
-            self.diffuseAlbedoMean = torch.Tensor(self.file["diffuseAlbedo"]["model"]["mean"]).reshape(-1, 3).to(device).float()
-            self.diffuseAlbedoPca = torch.Tensor(self.file["diffuseAlbedo"]["model"]["pcaBasis"]).reshape(-1, 3, self.albedoBasisSize).to(device).float().permute(2, 0, 1)
-            self.diffuseAlbedoPcaVar = torch.Tensor(self.file["diffuseAlbedo"]["model"]["pcaVariance"]).reshape(self.albedoBasisSize).to(device).float()
+            self.diffuseAlbedoMean = torch.from_numpy(np.array(self.file["diffuseAlbedo"]["model"]["mean"])).reshape(-1, 3).to(device).float()
+            self.diffuseAlbedoPca = torch.from_numpy(np.array(self.file["diffuseAlbedo"]["model"]["pcaBasis"])).reshape(-1, 3, self.albedoBasisSize).to(device).float().permute(2, 0, 1)
+            self.diffuseAlbedoPcaVar = torch.from_numpy(np.array(self.file["diffuseAlbedo"]["model"]["pcaVariance"])).reshape(self.albedoBasisSize).to(device).float()
 
-            self.specularAlbedoMean = torch.Tensor(self.file["specularAlbedo"]["model"]["mean"]).reshape(-1, 3).to(device).float()
-            self.specularAlbedoPca = torch.Tensor(self.file["specularAlbedo"]["model"]["pcaBasis"]).reshape(-1, 3, self.albedoBasisSize).to(device).float().permute(2, 0, 1)
-            self.specularAlbedoPcaVar = torch.Tensor(self.file["specularAlbedo"]["model"]["pcaVariance"]).reshape(self.albedoBasisSize).to(device).float()
+            self.specularAlbedoMean = torch.from_numpy(np.array(self.file["specularAlbedo"]["model"]["mean"])).reshape(-1, 3).to(device).float()
+            self.specularAlbedoPca = torch.from_numpy(np.array(self.file["specularAlbedo"]["model"]["pcaBasis"])).reshape(-1, 3, self.albedoBasisSize).to(device).float().permute(2, 0, 1)
+            self.specularAlbedoPcaVar = torch.from_numpy(np.array(self.file["specularAlbedo"]["model"]["pcaVariance"])).reshape(self.albedoBasisSize).to(device).float()
             self.file.close()
 
             #save to pickle for future loading
