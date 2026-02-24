@@ -1,2 +1,62 @@
-ralph-template/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Testing / Coverage
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Model data (large binaries - download separately)
+data/baselMorphableModel/
+NextFace/baselMorphableModel/
+baselMorphableModel/
+
+# MediaPipe model + demo assets
+data/resources/
+NextFace/resources/
+
+# User input/output
+NextFace/input/
+NextFace/output/
+input/
+output/
+
+# Agent/tool artifacts
 .omc/
+.sidecar/
+.last-branch
+ralph-template/
+prd.json
+prd.json.example
+progress.txt
+ralph.sh
+CLAUDE.dev.md
+PORTING_PLAN.md
+
+# Lock files (regenerated)
+uv.lock
