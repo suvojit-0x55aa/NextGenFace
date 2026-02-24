@@ -77,9 +77,13 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
                 },
             }
         else:
+            # Use direct_projective integrator to support differentiable
+            # rendering w.r.t. vertex positions (discontinuous params).
+            # Standard path/prb integrators cannot propagate gradients
+            # through geometry changes (silhouette edges).
             integrator = {
-                "type": "path",
-                "max_depth": bounces + 1,
+                "type": "direct_projective",
+                "sppi": 0,
             }
 
         # Assemble scene dict with mesh + bsdf

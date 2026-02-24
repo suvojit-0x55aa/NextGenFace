@@ -11,6 +11,8 @@ dependencies = [
     "h5py",
     "tqdm",
     "mediapipe",
+    "face-alignment>=1.4.1",
+    "torchvision>=0.25.0",
 ]
 
 [dependency-groups]

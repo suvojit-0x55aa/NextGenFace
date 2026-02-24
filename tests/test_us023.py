@@ -123,7 +123,7 @@ class TestSharedIdentityParameterInit:
         config = Config()
         config.device = "cpu"
         config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
-        config.textureResolution = 64
+        config.textureResolution = 256
         config.rtTrainingSamples = 1
         config.lamdmarksDetectorType = "fan"
         config.bands = 2
@@ -157,7 +157,7 @@ class TestSharedIdentityParameterInit:
         config = Config()
         config.device = "cpu"
         config.path = os.path.join(NEXTFACE_DIR, "baselMorphableModel")
-        config.textureResolution = 64
+        config.textureResolution = 256
         config.rtTrainingSamples = 1
         config.lamdmarksDetectorType = "fan"
         config.bands = 2
