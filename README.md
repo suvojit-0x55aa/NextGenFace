@@ -293,7 +293,7 @@ NextGenFace is available under the GPL license for research and educational purp
 
 ## Contact
 
-**Port author**: twitter: [@_smanna](https://twitter.com/_smanna)
+**Port author**: Suvojit Manna (twitter: @_smanna)
 
 **Original author**: Abdallah Dib (deeb.abdallah @at gmail / twitter: abdallah_dib)
 
