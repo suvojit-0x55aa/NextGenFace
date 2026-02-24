@@ -31,19 +31,16 @@ Thumbs.db
 *.swo
 *~
 
-# Model data (large binaries - download separately)
-data/baselMorphableModel/
+# Large model binaries (download separately)
+*.h5
 NextFace/baselMorphableModel/
-baselMorphableModel/
 
-# MediaPipe model + demo assets
-data/resources/
+# Original NextFace directories (use data/ instead)
 NextFace/resources/
-
-# User input/output
 NextFace/input/
 NextFace/output/
-input/
+
+# User output
 output/
 
 # Agent/tool artifacts
