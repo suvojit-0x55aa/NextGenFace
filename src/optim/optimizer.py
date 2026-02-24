@@ -176,11 +176,14 @@ class Optimizer:
         return loss
 
     def plotLoss(self, lossArr, index, fileName):
+        import matplotlib
+        matplotlib.use('Agg')
         import matplotlib.pyplot as plt
         plt.figure(index)
         plt.plot(lossArr)
         plt.scatter(np.arange(0, len(lossArr)).tolist(), lossArr, c='red')
         plt.savefig(fileName)
+        plt.close(index)
 
     def landmarkLoss(self, cameraVertices, landmarks):
         return self.pipeline.landmarkLoss(cameraVertices, landmarks, self.pipeline.vFocals, self.inputImage.center)
