@@ -1,1 +1,3 @@
-# Populated after file moves
+from facemodel.morphablemodel import MorphableModel
+
+__all__ = ["MorphableModel"]
