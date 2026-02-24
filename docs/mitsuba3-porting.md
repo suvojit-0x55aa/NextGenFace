@@ -1,6 +1,6 @@
 # Mitsuba 3 Porting Notes
 
-Lessons learned from porting NextFace's rendering backend from PyRedner to Mitsuba 3.
+Lessons learned from porting the NextFace rendering backend from PyRedner to Mitsuba 3.
 
 ---
 

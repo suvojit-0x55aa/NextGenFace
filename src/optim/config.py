@@ -6,13 +6,13 @@ import sys
 def resolve_data_path(explicit_path=None):
 	"""Find baselMorphableModel data directory.
 
-	Checks in order: explicit path > NEXTFACE_DATA_DIR env var >
+	Checks in order: explicit path > NEXTGENFACE_DATA_DIR env var >
 	./data/baselMorphableModel > ./baselMorphableModel
 	"""
 	if explicit_path and os.path.isdir(explicit_path):
 		return explicit_path
 
-	env_path = os.environ.get("NEXTFACE_DATA_DIR")
+	env_path = os.environ.get("NEXTGENFACE_DATA_DIR")
 	if env_path and os.path.isdir(env_path):
 		return env_path
 

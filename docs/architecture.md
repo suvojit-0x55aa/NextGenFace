@@ -1,12 +1,12 @@
-# NextFace Architecture
+# NextGenFace Architecture
 
-NextFace is a modular 3D face reconstruction system that reconstructs face geometry and reflectance from monocular images using differentiable ray tracing. The original implementation used PyRedner; this port targets Mitsuba 3.
+NextGenFace is a modular 3D face reconstruction system that reconstructs face geometry and reflectance from monocular images using differentiable ray tracing. Based on the original [NextFace](https://github.com/abdallahdib/NextFace) by Abdallah Dib; this port replaces PyRedner with Mitsuba 3.
 
 ---
 
 ## 1. System Overview
 
-NextFace reconstructs 3D face geometry and reflectance from monocular images using differentiable ray tracing. The system uses a statistical morphable model (Basel Face Model 2017) and optimizes scene attributes through a 3-stage pipeline.
+NextGenFace reconstructs 3D face geometry and reflectance from monocular images using differentiable ray tracing. The system uses a statistical morphable model (Basel Face Model 2017) and optimizes scene attributes through a 3-stage pipeline.
 
 High-level flow:
 
@@ -35,20 +35,20 @@ Input Image → Landmark Detection → 3-Stage Optimization → 3D Face + Reflec
 
 ## 3. Module Details
 
-### `nextface/` — Public API & CLI
+### `nextgenface/` — Public API & CLI
 
 Thin package that re-exports the primary user-facing symbols from subpackages.
 
 | File | Purpose |
 |------|---------|
 | `__init__.py` | Re-exports `Renderer`, `Pipeline`, `Optimizer`, `Config` |
-| `cli.py` | CLI entry point (`nextface-reconstruct`), parses args, runs optimizer |
+| `cli.py` | CLI entry point (`nextgenface-reconstruct`), parses args, runs optimizer |
 | `_version.py` | Package version string |
 
 Users access the full system through:
 
 ```python
-from nextface import Renderer, Pipeline, Optimizer, Config
+from nextgenface import Renderer, Pipeline, Optimizer, Config
 ```
 
 ---
@@ -290,7 +290,7 @@ from rendering.renderer import Renderer   # correct
 from src.rendering.renderer import Renderer  # wrong
 ```
 
-This keeps inter-module dependencies explicit and prevents circular imports. The `nextface` package is intentionally thin — it only re-exports; it does not contain logic.
+This keeps inter-module dependencies explicit and prevents circular imports. The `nextgenface` package is intentionally thin — it only re-exports; it does not contain logic.
 
 ### Hatchling src-layout
 
@@ -303,7 +303,7 @@ Using `src/` prefix with Hatchling's build system ensures that the source tree i
 ```
 pyproject.toml          # Hatchling build, dependencies, CLI entry point
 src/
-  nextface/             # Thin public API package
+  nextgenface/          # Thin public API package
   rendering/            # Installed as top-level `rendering`
   facemodel/            # Installed as top-level `facemodel`
   geometry/             # Installed as top-level `geometry`
@@ -329,7 +329,7 @@ Each subpackage is listed individually in `pyproject.toml`. Hatchling strips the
 ```toml
 [tool.hatch.build.targets.wheel]
 packages = [
-  "src/nextface",
+  "src/nextgenface",
   "src/rendering",
   "src/facemodel",
   "src/geometry",
@@ -343,7 +343,7 @@ packages = [
 
 ```toml
 [project.scripts]
-nextface-reconstruct = "nextface.cli:main"
+nextgenface-reconstruct = "nextgenface.cli:main"
 ```
 
 ### Installation

@@ -1,6 +1,6 @@
-# NextFace (Mitsuba 3 Port)
+# NextGenFace
 
-NextFace ported to Mitsuba 3 — high-fidelity 3D face reconstruction from monocular images using differentiable ray tracing. Scene attributes — 3D geometry, reflectance (diffuse, specular and roughness), pose, camera parameters, and scene illumination — are estimated via a first-order optimization method that fits a statistical morphable model to input image(s).
+A modernized fork of [NextFace](https://github.com/abdallahdib/NextFace) by Abdallah Dib — high-fidelity 3D face reconstruction from monocular images using Mitsuba 3 differentiable ray tracing. Scene attributes — 3D geometry, reflectance (diffuse, specular and roughness), pose, camera parameters, and scene illumination — are estimated via a first-order optimization method that fits a statistical morphable model to input image(s).
 
 <p align="center">
 <img src="data/resources/emily.png" style="float: left; width: 23%; margin-right: 1%; margin-bottom: 0.5em;">
@@ -51,7 +51,7 @@ The original 3-stage optimization pipeline is preserved exactly.
 - **Mitsuba 3 differentiable ray tracing** (replaces PyRedner)
 - **Automatic variant selection**: CUDA > LLVM > scalar fallback
 - **DrJit-PyTorch gradient bridge** for seamless optimization
-- **Installable package** with `nextface-reconstruct` CLI entry point
+- **Installable package** with `nextgenface-reconstruct` CLI entry point
 - **MediaPipe** landmark detection (more accurate than FAN; FAN still available)
 
 
@@ -116,10 +116,10 @@ Add the export to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist it.
 
 ## Agent-Assisted Installation
 
-Using an AI coding agent? You can install NextFace with this prompt:
+Using an AI coding agent? You can install NextGenFace with this prompt:
 
 ```
-Clone and install the NextFace project. Use `uv pip install -e .` for installation.
+Clone and install the NextGenFace project. Use `uv pip install -e .` for installation.
 On macOS, install LLVM via Homebrew and set
 DRJIT_LIBLLVM_PATH=/opt/homebrew/opt/llvm/lib/libLLVM.dylib for the differentiable
 rendering backend.
@@ -134,19 +134,19 @@ rendering backend.
 
 ```bash
 # Single image
-nextface-reconstruct --input path/to/image.png --output ./output/
+nextgenface-reconstruct --input path/to/image.png --output ./output/
 
 # Batch reconstruction (images with same resolution)
-nextface-reconstruct --input path/to/folder/ --output ./output/
+nextgenface-reconstruct --input path/to/folder/ --output ./output/
 
 # Same person, multiple images (shared identity)
-nextface-reconstruct --sharedIdentity --input path/to/folder/ --output ./output/
+nextgenface-reconstruct --sharedIdentity --input path/to/folder/ --output ./output/
 
 # Custom configuration
-nextface-reconstruct --config configs/shadows.ini --input image.png --output ./output/
+nextgenface-reconstruct --config configs/shadows.ini --input image.png --output ./output/
 
 # Resume from checkpoint (skip stages 1 and 2)
-nextface-reconstruct \
+nextgenface-reconstruct \
   --checkpoint output/checkpoints/stage2_output.pickle \
   --skipStage1 --skipStage2 \
   --input image.png --output ./output/
@@ -157,7 +157,7 @@ The `--sharedIdentity` flag tells the optimizer that all images belong to the sa
 ### Python API
 
 ```python
-from nextface import Renderer, Pipeline, Optimizer, Config
+from nextgenface import Renderer, Pipeline, Optimizer, Config
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -198,7 +198,7 @@ For harsh lighting with residual shadows, try `configs/shadows.ini` or increase 
 
 ## How It Works
 
-NextFace reproduces the optimization strategy from the [original paper](https://arxiv.org/abs/2101.05356) using a 3-stage pipeline, now powered by Mitsuba 3 for differentiable rendering:
+NextGenFace reproduces the optimization strategy from the [original paper](https://arxiv.org/abs/2101.05356) using a 3-stage pipeline, now powered by Mitsuba 3 for differentiable rendering:
 
 **Stage 1 — Coarse geometric alignment**
 Face expression and head pose are estimated by minimizing the geometric loss between 2D landmarks and their corresponding face vertices. No rendering is involved. This produces a good initialization for Stage 2.
@@ -230,7 +230,7 @@ Optimization takes approximately 4-5 minutes depending on GPU performance. Per i
 
 ```
 src/
-  nextface/       # Public API (Renderer, Pipeline, Optimizer, Config), CLI entry point
+  nextgenface/    # Public API (Renderer, Pipeline, Optimizer, Config), CLI entry point
   rendering/      # Mitsuba 3 renderer, DrJit-PyTorch gradient bridge, scene assembly
   facemodel/      # Basel Face Model loader, mesh normals, normal sampler
   geometry/       # Camera model, projection, spherical harmonics, OBJ export
@@ -269,7 +269,7 @@ Summary of changes from the original NextFace codebase:
 
 - **PyRedner → Mitsuba 3**: All rendering code was rewritten. The original PyRedner-based forward/backward pass is replaced by Mitsuba 3 scene assembly and rendering, with a custom DrJit-PyTorch gradient bridge (`src/rendering/_gradient_bridge.py`) to route gradients back into PyTorch autograd.
 - **Automatic variant selection**: At runtime, the renderer selects `cuda_ad_rgb` > `llvm_ad_rgb` > `scalar_rgb` based on hardware availability.
-- **Package structure**: Flat file layout reorganized into `src/` with distinct subpackages (`rendering`, `facemodel`, `geometry`, `landmarks`, `imaging`, `optim`) and a thin `nextface` wrapper for public API re-exports.
+- **Package structure**: Flat file layout reorganized into `src/` with distinct subpackages (`rendering`, `facemodel`, `geometry`, `landmarks`, `imaging`, `optim`) and a thin `nextgenface` wrapper for public API re-exports.
 - **Installation**: conda + INSTALL script replaced by `pyproject.toml` with hatchling; installable via `pip` or `uv`.
 - **Python/PyTorch**: Minimum versions bumped to Python 3.10 and PyTorch 2.0.
 - **MediaPipe**: Updated to the current MediaPipe API (the original used an older interface).
@@ -278,7 +278,7 @@ Summary of changes from the original NextFace codebase:
 
 ## License
 
-NextFace is available under the GPL license for research and educational purposes only. See [LICENSE](LICENSE) for details.
+NextGenFace is available under the GPL license for research and educational purposes only. See [LICENSE](LICENSE) for details.
 
 
 ## Acknowledgements

@@ -1,6 +1,6 @@
-# NextFace Usage Guide
+# NextGenFace Usage Guide
 
-NextFace reconstructs a photorealistic 3D face from one or more photographs. It estimates head pose, facial shape, skin reflectance (diffuse, specular, roughness), and scene lighting using a 3-stage differentiable optimization pipeline built on Mitsuba 3.
+NextGenFace reconstructs a photorealistic 3D face from one or more photographs. It estimates head pose, facial shape, skin reflectance (diffuse, specular, roughness), and scene lighting using a 3-stage differentiable optimization pipeline built on Mitsuba 3.
 
 ---
 
@@ -20,7 +20,7 @@ NextFace reconstructs a photorealistic 3D face from one or more photographs. It 
 
 ## 1. Overview
 
-NextFace takes a photograph of a face and produces:
+NextGenFace takes a photograph of a face and produces:
 
 - A textured 3D mesh with estimated diffuse, specular, and roughness maps
 - An estimated environment map representing scene lighting
@@ -75,7 +75,7 @@ On CUDA-capable Linux machines, use the `cuda_ad_rgb` variant (selected automati
 
 ### Basel Face Model Data (Manual Download Required)
 
-NextFace requires BFM 2017 `.h5` files from the University of Basel. This step **cannot be automated** -- you must submit a license agreement form, and the download link is sent to your email.
+NextGenFace requires BFM 2017 `.h5` files from the University of Basel. This step **cannot be automated** -- you must submit a license agreement form, and the download link is sent to your email.
 
 1. Go to https://faces.dmi.unibas.ch/bfm/bfm2017.html
 2. Fill out and submit the license agreement form
@@ -95,12 +95,12 @@ data/baselMorphableModel/
 Place the directory at `./data/baselMorphableModel/` relative to your working directory, or set the environment variable:
 
 ```bash
-export NEXTFACE_DATA_DIR=/path/to/baselMorphableModel
+export NEXTGENFACE_DATA_DIR=/path/to/baselMorphableModel
 ```
 
 The `Config` class resolves the data path in this priority order:
 1. `config.path` (set explicitly or via `.ini` file)
-2. `NEXTFACE_DATA_DIR` environment variable
+2. `NEXTGENFACE_DATA_DIR` environment variable
 3. `./data/baselMorphableModel`
 4. `./baselMorphableModel`
 
@@ -129,7 +129,7 @@ L = landmark_loss(projected_vertices, detected_landmarks)
 **Example:**
 
 ```python
-from nextface import Config, Optimizer
+from nextgenface import Config, Optimizer
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -239,7 +239,7 @@ optimizer.saveOutput(samples=optimizer.config.rtSamples)
 Config can be loaded from an `.ini` file or set programmatically on the `Config` object.
 
 ```python
-from nextface import Config
+from nextgenface import Config
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -264,7 +264,7 @@ config.device = 'cuda'
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `path` | str | `'./data/baselMorphableModel'` | Path to the BFM data directory. Override with `NEXTFACE_DATA_DIR` env var or set explicitly. |
+| `path` | str | `'./data/baselMorphableModel'` | Path to the BFM data directory. Override with `NEXTGENFACE_DATA_DIR` env var or set explicitly. |
 | `textureResolution` | int | `512` | UV texture map resolution in pixels (square). `256` is faster; `512` gives finer detail. Must match the resolution supported by the morphable model UV layout. |
 | `trimPca` | bool | `False` | If `True`, uses a reduced PCA basis (fewer eigenvectors). Speeds up computation slightly at the cost of expressivity. Leave `False` unless memory-constrained. |
 
@@ -444,7 +444,7 @@ Checkpoints are Python pickle files saved after each optimization stage. They co
 Use the CLI to resume from a checkpoint and skip earlier stages:
 
 ```bash
-nextface-reconstruct \
+nextgenface-reconstruct \
     --input ./data/input/s1.png \
     --output ./output \
     --config configs/default.ini \
@@ -514,7 +514,7 @@ When `sharedIdentity = True` (multiple images, same person), texture maps use in
 **Multiple images of the same person.** Provide a directory of images and pass `sharedIdentity=True`. The optimizer will share the shape and albedo identity across all frames while fitting per-frame expression, pose, and lighting independently. This yields significantly better albedo estimates because the lighting-from-multiple-views disambiguation helps separate reflectance from illumination.
 
 ```bash
-nextface-reconstruct \
+nextgenface-reconstruct \
     --input ./data/input/person_images/ \
     --output ./output \
     --config configs/default.ini \
@@ -538,7 +538,7 @@ nextface-reconstruct \
 ### Basic Reconstruction
 
 ```python
-from nextface import Config, Optimizer
+from nextgenface import Config, Optimizer
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -555,7 +555,7 @@ optimizer.run(
 
 ```python
 import os
-from nextface import Config, Optimizer
+from nextgenface import Config, Optimizer
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -606,7 +606,7 @@ if "vEnhancedDiffuse" in params:
 ```python
 import pickle
 import torch
-from nextface import Config, Pipeline
+from nextgenface import Config, Pipeline
 from geometry.obj_export import saveObj
 
 config = Config()
@@ -651,7 +651,7 @@ print("Mesh saved to ./output/mesh.obj")
 
 ```python
 import torch
-from nextface import Config, Optimizer
+from nextgenface import Config, Optimizer
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")
@@ -675,7 +675,7 @@ optimizer.saveOutput(samples=optimizer.config.rtSamples)
 ### Multi-Image Reconstruction (Same Person, Shared Identity)
 
 ```python
-from nextface import Config, Optimizer
+from nextgenface import Config, Optimizer
 
 config = Config()
 config.fillFromDicFile("configs/default.ini")

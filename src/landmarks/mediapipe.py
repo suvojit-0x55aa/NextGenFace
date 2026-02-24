@@ -12,7 +12,7 @@ def _find_model_path():
         os.path.join(os.path.dirname(__file__), "..", "..", "NextFace", "resources", "face_landmarker.task"),
         os.path.join(os.path.dirname(__file__), "..", "..", "data", "resources", "face_landmarker.task"),
     ]
-    env_path = os.environ.get("NEXTFACE_DATA_DIR")
+    env_path = os.environ.get("NEXTGENFACE_DATA_DIR")
     if env_path:
         candidates.insert(0, os.path.join(env_path, "resources", "face_landmarker.task"))
     for p in candidates:
