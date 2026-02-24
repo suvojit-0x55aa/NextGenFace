@@ -33,6 +33,7 @@ Thumbs.db
 
 # Large model binaries (download separately)
 *.h5
+data/baselMorphableModel/morphableModel-2017.pickle
 NextFace/baselMorphableModel/
 
 # Original NextFace directories (use data/ instead)
