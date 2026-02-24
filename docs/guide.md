@@ -73,11 +73,14 @@ print(mi.variant())  # should print: llvm_ad_rgb
 
 On CUDA-capable Linux machines, use the `cuda_ad_rgb` variant (selected automatically when `device = 'cuda'` is set in config).
 
-### Basel Face Model Data
+### Basel Face Model Data (Manual Download Required)
 
-NextFace requires BFM 2009 `.h5` files. Download from the official Basel Face Model page (registration required):
+NextFace requires BFM 2017 `.h5` files from the University of Basel. This step **cannot be automated** -- you must submit a license agreement form, and the download link is sent to your email.
 
-- https://faces.dmi.unibas.ch/bfm/main.php?nav=1-2&id=downloads
+1. Go to https://faces.dmi.unibas.ch/bfm/bfm2017.html
+2. Fill out and submit the license agreement form
+3. Wait for the download link to arrive by email
+4. Download and extract the model files
 
 The expected directory layout:
 

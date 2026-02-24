@@ -120,12 +120,12 @@ Using an AI coding agent? You can install NextFace with this prompt:
 
 ```
 Clone and install the NextFace project. Use `uv pip install -e .` for installation.
-Download the Basel Face Model 2017 (.h5) from https://faces.dmi.unibas.ch/bfm/bfm2017.html
-and the AlbedoMM (.h5) from https://github.com/waps101/AlbedoMM/releases and place both
-files in data/baselMorphableModel/. On macOS, install LLVM via Homebrew and set
+On macOS, install LLVM via Homebrew and set
 DRJIT_LIBLLVM_PATH=/opt/homebrew/opt/llvm/lib/libLLVM.dylib for the differentiable
 rendering backend.
 ```
+
+**Note:** The Basel Face Model 2017 (.h5) cannot be downloaded automatically. It requires submitting a license agreement form at https://faces.dmi.unibas.ch/bfm/bfm2017.html and the download link is sent by email. The AlbedoMM can be downloaded directly from https://github.com/waps101/AlbedoMM/releases. Place both files in `data/baselMorphableModel/`.
 
 
 ## How to Use
