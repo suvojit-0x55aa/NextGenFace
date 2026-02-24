@@ -19,7 +19,7 @@ def build_camera(focal, width, height, clip_near=10.0):
     Returns:
         dict: Mitsuba sensor dict suitable for mi.load_dict().
     """
-    focal_val = float(focal)
+    focal_val = float(focal.detach() if hasattr(focal, 'detach') else focal)
     width_val = int(width)
     height_val = int(height)
 
