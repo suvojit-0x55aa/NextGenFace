@@ -19,7 +19,7 @@ def _tensor_to_bitmap(tensor):
     Returns:
         mi.Bitmap: Mitsuba bitmap object.
     """
-    arr = tensor.detach().cpu().to(torch.float32).numpy()
+    arr = tensor.detach().cpu().to(torch.float32).clamp(0.0, 1.0).numpy()
     if arr.ndim == 3 and arr.shape[2] == 1:
         arr = arr[:, :, 0]  # [H, W, 1] -> [H, W] for single-channel
     return mi.Bitmap(arr)

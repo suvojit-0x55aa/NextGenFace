@@ -66,6 +66,9 @@ class Renderer:
             vertices, indices, normal, uv, diffuse, specular,
             roughness, focal, envMap,
         )
+        # Use differentiable integrator when gradients are enabled,
+        # high-quality path integrator otherwise (final output renders).
+        differentiable = torch.is_grad_enabled()
         return build_scenes(
             vertices, indices, normal, uv, diffuse, specular,
             roughness, focal, envMap,
@@ -73,6 +76,7 @@ class Renderer:
             screen_height=self.screenHeight,
             samples=self.samples,
             bounces=self.bounces,
+            differentiable=differentiable,
         )
 
     def renderAlbedo(self, scenes):

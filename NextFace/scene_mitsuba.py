@@ -15,7 +15,8 @@ from envmap_mitsuba import build_envmap
 
 def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
                  roughness, focal, envmap, screen_width, screen_height,
-                 samples=8, bounces=1, albedo_mode=False):
+                 samples=8, bounces=1, albedo_mode=False,
+                 differentiable=True):
     """Build a list of Mitsuba scenes from batched parameters.
 
     Args:
@@ -32,6 +33,8 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
         screen_height: int
         samples: int, samples per pixel
         bounces: int, max path bounces
+        differentiable: bool, if True use direct_projective integrator for
+            gradient flow; if False use path integrator for high-quality output.
 
     Returns:
         list[mi.Scene]: list of N loaded Mitsuba scenes.
@@ -76,7 +79,7 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
                     "max_depth": 1,
                 },
             }
-        else:
+        elif differentiable:
             # Use direct_projective integrator to support differentiable
             # rendering w.r.t. vertex positions (discontinuous params).
             # Standard path/prb integrators cannot propagate gradients
@@ -84,6 +87,13 @@ def build_scenes(vertices, indices, normals, uvs, diffuse, specular,
             integrator = {
                 "type": "direct_projective",
                 "sppi": 0,
+            }
+        else:
+            # High-quality path integrator for final (non-differentiable)
+            # output renders. Supports indirect illumination (multi-bounce).
+            integrator = {
+                "type": "path",
+                "max_depth": bounces + 1,
             }
 
         # Assemble scene dict with mesh + bsdf
