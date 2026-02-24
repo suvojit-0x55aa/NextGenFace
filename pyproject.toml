@@ -4,21 +4,21 @@ version = "0.2.0"
 description = "3D face reconstruction using Mitsuba 3 differentiable rendering"
 requires-python = ">=3.10"
 dependencies = [
-    "mitsuba>=3.5",
-    "torch>=2.0",
-    "numpy",
-    "opencv-python",
-    "h5py",
-    "tqdm",
-    "mediapipe",
-    "face-alignment>=1.4.1",
-    "torchvision>=0.25.0",
+    "mitsuba~=3.8",
+    "torch~=2.10",
+    "numpy~=2.4",
+    "opencv-python~=4.13",
+    "h5py~=3.15",
+    "tqdm~=4.67",
+    "mediapipe~=0.10",
+    "face-alignment~=1.4",
+    "torchvision~=0.25",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "pytest-cov",
+    "pytest~=9.0",
+    "pytest-cov~=7.0",
 ]
 
 [build-system]
