@@ -1,9 +1,12 @@
 import pickle
+import warnings
 
 
 def loadDictionaryFromPickle(picklePath):
-    with open(picklePath, 'rb') as handle:
-        data = pickle.load(handle)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*align.*", category=DeprecationWarning)
+        with open(picklePath, 'rb') as handle:
+            data = pickle.load(handle)
     return data
 
 
