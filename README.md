@@ -1,5 +1,7 @@
 # NextGenFace
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/suvojit-0x55aa/NextGenFace/blob/main/docs/demo.ipynb)
+
 A modernized fork of [NextFace](https://github.com/abdallahdib/NextFace) by Abdallah Dib — high-fidelity 3D face reconstruction from monocular images using Mitsuba 3 differentiable ray tracing. Scene attributes — 3D geometry, reflectance (diffuse, specular and roughness), pose, camera parameters, and scene illumination — are estimated via a first-order optimization method that fits a statistical morphable model to input image(s).
 
 <p align="center">

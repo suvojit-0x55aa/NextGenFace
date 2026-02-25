@@ -415,13 +415,41 @@ class Optimizer:
             overlay = overlayImage(inputTensor[i], images[i])
             #saveImage(overlay, outputDir + '/overlay_' + str(i) + '.png')
 
+            # Force alpha=1 on albedo renders so background stays black (not transparent/white)
+            diffAlb = diffuseAlbedo[self.getTextureIndex(i)].clone()
+            diffAlb[..., 3:] = 1.0
+            specAlb = specularAlbedo[self.getTextureIndex(i)].clone()
+            specAlb[..., 3:] = 1.0
+            roughAlb = roughnessAlbedo[self.getTextureIndex(i)].clone()
+            roughAlb[..., 3:] = 1.0
+
             renderAll = torch.cat([torch.cat([inputTensor[i], torch.ones_like(images[i])[..., 3:]], dim = -1),
                            torch.cat([overlay.to(self.device), torch.ones_like(images[i])[..., 3:]], dim = -1),
                            images[i],
                            illum[i],
-                           diffuseAlbedo[self.getTextureIndex(i)],
-                           specularAlbedo[self.getTextureIndex(i)],
-                          roughnessAlbedo[self.getTextureIndex(i)]], dim=1)
+                           diffAlb,
+                           specAlb,
+                           roughAlb], dim=1)
+
+            # Add subplot title bar
+            img_w = inputTensor[i].shape[1]
+            titles = ['Input', 'Overlay', 'Reconstruction', 'Light', 'Diffuse', 'Specular', 'Roughness']
+            bar_h = max(30, inputTensor[i].shape[0] // 12)
+            total_w = img_w * len(titles)
+            title_bar = np.zeros((bar_h, total_w, 4), dtype=np.float32)
+            title_bar[..., 3] = 1.0
+            title_bar_uint8 = (title_bar * 255).astype(np.uint8)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = bar_h / 40.0
+            thickness = max(1, int(bar_h / 20.0))
+            for t_idx, title in enumerate(titles):
+                text_size = cv2.getTextSize(title, font, font_scale, thickness)[0]
+                text_x = t_idx * img_w + (img_w - text_size[0]) // 2
+                text_y = (bar_h + text_size[1]) // 2
+                cv2.putText(title_bar_uint8, title, (text_x, text_y), font, font_scale, (255, 255, 255, 255), thickness, cv2.LINE_AA)
+            title_bar_tensor = torch.from_numpy(title_bar_uint8.astype(np.float32) / 255.0).to(self.device)
+            renderAll = torch.cat([title_bar_tensor, renderAll], dim=0)
+
             saveImage(renderAll, outputDir + '/render_' + str(i) + '.png')
 
             saveImage(vDiffTextures[self.getTextureIndex(i)], outputDir + prefix + 'diffuseMap_' + str(self.getTextureIndex(i)) + '.png')

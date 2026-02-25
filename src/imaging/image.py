@@ -35,10 +35,10 @@ def overlayImage(background, image):
     assert(torch.is_tensor(background) and torch.is_tensor(image) and background.dim() == 3 and image.dim() == 3 and background.shape[0] == image.shape[0] and background.shape[1] == image.shape[1])
     assert(background.shape[-1] == 3 and image.shape[-1] == 4)
     from torchvision import transforms
-    background = transforms.ToPILImage()(background.permute(2, 1, 0).clone().detach().cpu()).convert("RGB")
-    image = transforms.ToPILImage()(torch.clamp(image.permute(2, 1, 0), 0, 1).clone().detach().cpu()).convert("RGBA")
+    background = transforms.ToPILImage()(background.permute(2, 0, 1).clone().detach().cpu()).convert("RGB")
+    image = transforms.ToPILImage()(torch.clamp(image.permute(2, 0, 1), 0, 1).clone().detach().cpu()).convert("RGBA")
     background.paste(image, (0, 0), image)
-    return transforms.ToTensor()(background).permute(2, 1, 0)
+    return transforms.ToTensor()(background).permute(1, 2, 0)
 
 def resizeImage(image, targetResolution):
     '''
