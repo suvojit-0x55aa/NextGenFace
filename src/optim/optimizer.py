@@ -179,9 +179,17 @@ class Optimizer:
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
+        stage_titles = [
+            'Stage 1: Landmarks (Pose + Expression)',
+            'Stage 2: Shape + Albedo + Light',
+            'Stage 3: Texture Refinement'
+        ]
         plt.figure(index)
         plt.plot(lossArr)
-        plt.scatter(np.arange(0, len(lossArr)).tolist(), lossArr, c='red')
+        plt.scatter(np.arange(0, len(lossArr)).tolist(), lossArr, c='red', s=4)
+        plt.xlabel('Iteration')
+        plt.ylabel('Loss')
+        plt.title(stage_titles[index] if index < len(stage_titles) else f'Stage {index+1}')
         plt.savefig(fileName)
         plt.close(index)
 
@@ -412,7 +420,11 @@ class Optimizer:
             #saveImage(roughnessAlbedo[self.getTextureIndex(i)], outputDir + prefix + 'roughness_' + str(self.getTextureIndex(i)) + '.png')
             #saveImage(illum[i], outputDir + prefix + 'illumination_' + str(i) + '.png')
             #saveImage(images[i], outputDir + prefix + 'finalReconstruction_' + str(i) + '.png')
-            overlay = overlayImage(inputTensor[i], images[i])
+            # Use albedo alpha as face mask (path tracer has alpha=1 everywhere)
+            faceMask = diffuseAlbedo[self.getTextureIndex(i), ..., 3:]
+            overlayInput = images[i].clone()
+            overlayInput[..., 3:] = faceMask
+            overlay = overlayImage(inputTensor[i], overlayInput)
             #saveImage(overlay, outputDir + '/overlay_' + str(i) + '.png')
 
             # Force alpha=1 on albedo renders so background stays black (not transparent/white)
